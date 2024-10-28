@@ -1,0 +1,29 @@
+#!/bin/bash
+
+. /usr/local/cbdb_hostmon/etc/config
+. /usr/local/cbdb_hostmon/bin/logging
+
+is_cbdb_running() {
+	[ ! -f $MASTER_DATA_DIRECTORY/postmaster.pid ] && return 1
+	[ ! -S /tmp/.s.PGSQL.${CBDBPORT} ] && return 1
+	[ $( pgrep postgres | wc -l ) -eq 0 ] && return 1
+	return 0
+}
+
+analyze="false"
+nthminute=$( date +%M | cut -c2- )
+if [ "$nthminute" = "0" ]; then
+	analyze="true"
+fi
+
+is_cbdb_running
+if [ $? -eq 1 ]; then
+	logwarn "Cloudberry not running"
+	exit 1
+fi
+
+msgs=$( psql -qAt -d sar -c "SELECT * FROM sar.load( ${analyze} )" 2>&1 | awk 'NF {print}' ORS=', ' )
+if [ -z "$msgs" ]; then
+	loginfo "$msgs"
+fi
+

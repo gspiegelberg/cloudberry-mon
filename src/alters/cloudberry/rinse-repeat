@@ -1,0 +1,18 @@
+### psql -d cbmon -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid() AND datname='cbmon'"
+### dropdb cbmon
+### createdb cbmon
+
+DB=coredw
+
+psql -d ${DB} -c "DROP SCHEMA IF EXISTS cbmon CASCADE;"
+psql -d ${DB} -f alter-1000.sql
+psql -d ${DB} -f alter-1001.sql
+psql -d ${DB} -f alter-1002.sql
+psql -d ${DB} -f alter-1003.sql
+psql -d ${DB} -f alter-1004.sql
+psql -d ${DB} -f alter-1005.sql
+psql -d ${DB} -f alter-1006.sql
+psql -d ${DB} -f alter-1007.sql
+psql -d ${DB} -f alter-1008.sql
+psql -d ${DB} -f alter-1009.sql
+psql -d ${DB} -f alter-1010.sql

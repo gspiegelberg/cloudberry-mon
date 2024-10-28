@@ -1,0 +1,27 @@
+# cbmon database
+PGPORT=5432
+PGDATABASE=cbmon
+PGUSER=cbmon
+
+# Frequency loader runs, no point less than 60 if sar runs every 60 secs on cluster
+LOAD_DELAY=60
+
+# Analyze tables loaded after every X iteration
+ANALYZE_FREQ=10
+
+# gpseg-1 directory on mdw host
+#MASTER_DATA_DIRECTORY=/data/master/gpseg-1
+MASTER_DATA_DIRECTORY=/data/cbdb/master/gpseg-1
+
+# Master segment listening port
+CBDBPORT=5432
+
+# Logging
+# Uncomment for debug output
+#DEBUG=1
+
+# Comment out LOGFILE to turn off
+LOGFILE=/usr/local/cbmon/logs/loader.log
+
+# Rotate if larger than 1MB
+LOGMAXSIZE=1024000

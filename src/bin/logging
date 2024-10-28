@@ -1,0 +1,28 @@
+loginfo() {
+	_log "INFO" "$1"
+}
+
+logwarn() {
+	_log "WARN" "$1"
+}
+
+logerror() {
+	_log "ERROR" "$1"
+}
+
+logdebug() {
+	[ "$1" = "DEBUG" -a -z "${DEBUG}" ] && return 0
+	_log "DEBUG" "$1"
+}
+
+_log() {
+	# Logging turned off condition
+	[ -z "${LOGFILE}" ] && return 0
+
+	# Log rotation needed test
+	sz=0
+	[ -f "${LOGFILE}" ] && sz=$( stat -c %s ${LOGFILE} )
+	[ "$sz" -gt "$LOGMAXSIZE" ] && mv ${LOGFILE} ${LOGFILE}.old
+
+	printf "%s: %s: %s\n" "`date`" "$1" "$2" >> ${LOGFILE} 2>&1
+}

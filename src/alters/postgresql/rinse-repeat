@@ -1,0 +1,74 @@
+#For Dev
+#PSQL="psql -h /tmp -p 4432 -U cbmon"
+
+# For dashboarding
+PSQL="psql"
+$PSQL -d postgres -c "select pg_terminate_backend( pid ) from pg_stat_activity where pid <> pg_backend_pid() and datname='cbmon'"
+$PSQL -d postgres -c "drop database cbmon;"
+if [ $? -ne 0 ]; then
+	echo "someone in the database, kill them"
+	exit 1
+fi
+$PSQL -d postgres -c "create database cbmon;"
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1000.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1001.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1002.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1003.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1004.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1005.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1006.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1007.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1008.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1009.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1010.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1011.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1012.sql
+$PSQL -d cbmon -f ~/src/cbmon/src/alters/postgresql/alter-1013.sql
+
+cat << EOSQL | $PSQL -U cbmon -d cbmon
+\timing
+
+SELECT public.create_cluster(
+	'Test 1'::varchar
+	, 'gp80'::varchar
+	, '10.10.2.80'::varchar
+	, 5432::int
+	, 'cbmon'::varchar
+	, 'cbmon'::varchar
+	, 'gpadmin'::varchar
+	, 'gpadmin'::varchar
+);
+
+-- tweak
+UPDATE cluster_hosts SET hostname = replace(hostname, '-pri', '');
+
+-- UPDATE load_functions SET enabled = false WHERE funcname='public.load_disk_space';
+
+-- load test
+CALL public.load( 1, true, true );
+
+--select public.check_metric_table( 1, 'ldavg' );
+-- select public.load_ldavg( 1 );
+-- select count(*) from cluster_1_metrics.ldavg;
+
+--select public.check_metric_table( 1, 'cpu' );
+-- select public.load_cpu( 1 );
+-- select count(*) from cluster_1_metrics.cpu;
+
+--select public.check_metric_table( 1, 'disk' );
+-- select public.load_disk( 1 );
+-- select count(*) from cluster_1_metrics.disk;
+
+--select public.check_metric_table( 1, 'disk_space' );
+-- select public.load_disk_space( 1 );
+-- select count(*) from cluster_1_metrics.disk_space;
+
+--select public.check_metric_table( 1, 'memory' );
+-- select public.load_memory( 1 );
+-- select count(*) from cluster_1_metrics.memory;
+
+
+
+
+EOSQL
+

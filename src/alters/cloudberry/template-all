@@ -1,0 +1,19 @@
+
+CREATE EXTERNAL WEB TABLE cbmon.__NAME_segments_all(
+	hostname text,
+	period   timestamptz,
+) EXECUTE '/usr/local/cbmon/bin/sar_reader -a -S "FLAGS"' ON HOST
+  FORMAT 'TEXT' (DELIMITER ',' FILL MISSING FIELDS);
+
+CREATE EXTERNAL WEB TABLE cbmon.__NAME_master_all(
+        hostname text,
+        period   timestamptz,
+) EXECUTE '/usr/local/cbmon/bin/sar_reader -a -S "FLAGS"' ON MASTER
+  FORMAT 'TEXT' (DELIMITER ',' FILL MISSING FIELDS);
+
+CREATE VIEW cbmon._raw_NAME_all AS
+SELECT * FROM cbmon.__NAME_segments_all
+UNION
+SELECT * FROM cbmon.__NAME_master_all;
+
+
