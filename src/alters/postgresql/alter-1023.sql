@@ -103,7 +103,7 @@ BEGIN
 
 	-- create foreign server
 	sql := format(
-		'CREATE SERVER %s FOREIGN DATA WRAPPER postgres_fdw OPTIONS(host %s, port %s, dbname %s fetch_size %s)'
+		'CREATE SERVER %s FOREIGN DATA WRAPPER postgres_fdw OPTIONS(host %s, port %s, dbname %s, fetch_size %s)'
 		, cserver, quote_literal(v_mdwip)
 		, quote_literal(v_port), quote_literal(v_cbmondb)
 		, quote_literal(fsize)
