@@ -19,8 +19,8 @@ Description=CloudberryDB host metric loader service cluster 9
 After=postgresql-16.service
 
 [Service]
-User=postgres
-Group=postgres
+User=cbmon
+Group=cbmon
 Type=simple
 
 # For cbmon cluster 9

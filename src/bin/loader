@@ -37,7 +37,7 @@ while getopts $options opt
 do
 	case "$opt" in
 	a)
-		cluster_ids=$(psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT -c "SELECT id FROM public.clusters WHERE enabled ORDER BY id" | awk '{printf("%s ",$0)}' )
+		cluster_cmd="psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT -c 'SELECT id FROM public.clusters WHERE enabled ORDER BY id'"
 		;;
 	c)
 		if [ "$( echo "${OPTARG}" | sed -e 's/[[:space:]]\{1,\}/,/g' )" = "${OPTARG}" ]; then
@@ -50,6 +50,7 @@ do
 			cluster_ids=$( echo "${OPTARG}" | sed -e 's/[[:space:]]\{1,\}/ /g' )
 		fi
 
+		cluster_cmd="echo $cluster_ids"
 		;;
 	D)
 		DEBUG=1
