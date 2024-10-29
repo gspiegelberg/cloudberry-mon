@@ -44,7 +44,7 @@ WITH DATA'
 	ELSE
 
 		EXECUTE format(
-			'REFRESH MATERIALIZED VIEW %s.s.data_storage_summary_mv WITH DATA'
+			'REFRESH MATERIALIZED VIEW %s.data_storage_summary_mv WITH DATA'
 			, cmetrics
 		);
 
