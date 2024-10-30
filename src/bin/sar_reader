@@ -40,6 +40,12 @@ hn=$( hostname )
 
 if [ $all -eq 0 ]; then
 	safiles="/var/log/sa/sa${dom}"
+
+	# Beginning of day in the 0 minute the file may have been removed
+	# Avoids error when ext table read
+	if [ ! -f $safiles -o ! -s $safiles ]; then
+		exit 0
+	fi
 else
 	safiles=$( ls /var/log/sa/sa[0-3][0-9] )
 fi
