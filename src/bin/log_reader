@@ -39,6 +39,8 @@ do
 	esac
 done
 
-find "${GP_SEG_DATADIR}/log" -type f -name gpdb-\*.csv ${CMIN} -exec cat {} \;
-
+for csvlog in $( find "${MASTER_DATA_DIRECTORY}/log" -type f -name gpdb-\*.csv ${CMIN} -print )
+do
+	/usr/local/cbmon/bin/log_reader_helper.py $csvlog 
+done
 
