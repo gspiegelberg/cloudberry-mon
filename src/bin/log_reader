@@ -28,6 +28,7 @@ while getopts $options opt
 do
 	case "$opt" in
 	H)
+		hours="$OPTARG"
 		if [ "$OPTARG" -gt 0 ]; then
 			mins=$(( 60 * "$OPTARG" ))
 			CMIN="-cmin -${mins}"
@@ -41,6 +42,6 @@ done
 
 for csvlog in $( find "${MASTER_DATA_DIRECTORY}/log" -type f -name gpdb-\*.csv ${CMIN} -print )
 do
-	/usr/local/cbmon/bin/log_reader_helper.py $csvlog 
+	/usr/local/cbmon/bin/log_reader_helper.py -l $csvlog -H $hours
 done
 

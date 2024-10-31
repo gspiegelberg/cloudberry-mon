@@ -3,13 +3,36 @@
 import os
 import sys
 import csv
+from datetime import datetime, timedelta
 
-if len(sys.argv) != 2:
-    print("Usage: python3 log_reader_helped.py <csvfile>")
-    sys.exit(1)
+import argparse
 
-input_file = sys.argv[1]
+parser = argparse.ArgumentParser(
+	description=""
+        , formatter_class=argparse.RawDescriptionHelpFormatter
+)
 
+parser.add_argument(
+	"-l", "--log"
+	, help="log file to process"
+	, type=str
+)
+parser.add_argument(
+	"-H", "--hours"
+	, help="optional test log timestamp in past hours"
+	, type=int
+	, default=1
+)
+
+args = parser.parse_args()
+
+if os.path.isfile(args.log):
+    input_file = args.log
+else:
+    exit(1)
+
+target_ts = datetime.now()
+target_ts = target_ts - timedelta(hours=args.hours)
 
 #
 # Overcome csvlog corruption
@@ -17,8 +40,16 @@ input_file = sys.argv[1]
 def validate_row(row):
     if len(row) != 30:
         return False, "Discard, incorrect number of columns"
+
+    row_ts = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S.%f %Z")
+    if  row_ts < target_ts:
+        return False, "Discard"
+
+    if row[18].startswith(('connection ', 'statement: ', 'execute ', 'disconnection: ')):
+        return True, None
     
-    return True, None
+    return False, "Discard"
+
 
 
 with open(input_file, newline='', encoding='utf-8') as infile:
