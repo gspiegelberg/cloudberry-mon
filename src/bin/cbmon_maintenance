@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Schedule in cbmon cron
+# 0 0 * * * /usr/local/cbmon/bin/cbmon_maintenance
+#
 
 . /usr/local/cbmon/etc/config
 . /usr/local/cbmon/bin/logging
@@ -18,6 +22,10 @@ LOGFILE=/usr/local/cbmon/logs/maintenance.log
 loginfo "Cleaning load_status"
 psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
 	-c "DELETE FROM public.load_status WHERE created < now() - interval'1 week'"
+
+loginfo "Cleaning gen_status"
+psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
+	-c "DELETE FROM public.gen_status WHERE created < now() - interval'1 week'"
 
 # simple vacuum - with partitions there shouldn't be much bloat
 vacuumdb -d cbmon > /dev/null 2>&1
