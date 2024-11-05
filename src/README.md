@@ -125,18 +125,40 @@ PostgreSQL Metrics Database Host Only
 Enabling loader process
 ========================================================================
 
-1. Edit etc/config
+1. Edit etc/config and cbmon_loader.service to reflect cluster ID
 
-2. Install service file
+2. Install service file replacing <<CLUSTER_ID>> with cluster ID
    sudo install -o root -g root -m 0644 \
      /usr/local/cbmon/etc/cbmon_loader.service \
-     /etc/systemd/system/cbmon_loader.service
+     /etc/systemd/system/cbmon_loader-c<<CLUSTER_ID>>.service
 
 3. Reload
    sudo systemctl daemon-reload
 
+4. Start, verify and enable replacing <<CLUSTER_ID>> with cluster ID
+   sudo systemctl start cbmon_loader-c<<CLUSTER_ID>>
+   sudo systemctl status cbmon_loader-c<<CLUSTER_ID>>
+   sudo systemctl enable cbmon_loader-c<<CLUSTER_ID>>
 
 
+
+Enabling summareies process
+========================================================================
+
+1. Edit etc/config and cbmon_summaries.service to reflect cluster ID
+
+2. Install service file replacing <<CLUSTER_ID>> with cluster ID
+   sudo install -o root -g root -m 0644 \
+     /usr/local/cbmon/etc/cbmon_summaries.service \
+     /etc/systemd/system/cbmon_summaries-c<<CLUSTER_ID>>.service
+
+3. Reload
+   sudo systemctl daemon-reload
+
+4. Start, verify and enable replacing <<CLUSTER_ID>> with cluster ID
+   sudo systemctl start cbmon_loader-c<<CLUSTER_ID>>
+   sudo systemctl status cbmon_loader-c<<CLUSTER_ID>>
+   sudo systemctl enable cbmon_loader-c<<CLUSTER_ID>>
 
 
 

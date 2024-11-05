@@ -1,0 +1,35 @@
+#
+# 1. Change -c 9 to cluster id of that to load
+#
+# 2. Copy to /etc/systemd/system
+#    sudo install cbmon_summaries.service /etc/systemd/system/cbmon_summaries-9.service -o root -g root -m 0644
+#
+# 3. Reload
+#    sudo systemctl daemon-reload
+#
+# 4. Start test
+#    sudo systemctl start cbmon_summaries-9
+#    ps -ef | grep summaries
+#
+# 5. Enable if running
+#    sudo systemctl enable cbmon_summaries-9
+#
+[Unit]
+Description=CloudberryDB host metric summaries service cluster 9
+After=postgresql-16.service
+
+[Service]
+User=cbmon
+Group=cbmon
+Type=simple
+
+# For cbmon cluster 9
+ExecStart=/usr/local/cbmon/bin/summaries -c 9
+Restart=always
+RestartSec=30
+SyslogIdentifier=summaries
+KillMode=process
+TimeoutSec=60
+
+[Install]
+WantedBy=multi-user.target

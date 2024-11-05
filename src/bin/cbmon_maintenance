@@ -1,22 +1,25 @@
 #!/bin/bash
 
 . /usr/local/cbmon/etc/config
-. /usr/local/cbmon/etc/logging
+. /usr/local/cbmon/bin/logging
 
+LOGFILE=/usr/local/cbmon/logs/maintenance.log
 
+# NOT Necessary - pg_partman runs in bgworker
 # pg_partman maintenance
 # Add & drop partitions
 # Runs an analyze on partitions
-loginfo "Start partition maintenance"
-psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
-	-c "CALL partman.run_maintenance_proc( 0, true, true );"
+#loginfo "Start partition maintenance"
+#psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
+#	-c "CALL partman.run_maintenance_proc( 0, true, true );"
 
 
 # Scrub public.load_status, for now...
 loginfo "Cleaning load_status"
 psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
-	-c "DELETE FROM public.load_status WHERE created < now() - interval'4 weeks'"
+	-c "DELETE FROM public.load_status WHERE created < now() - interval'1 week'"
 
 # simple vacuum - with partitions there shouldn't be much bloat
-vacuumdb -d cbmon
+vacuumdb -d cbmon > /dev/null 2>&1
+loginfo "vacuumdb exited with $?"
 
