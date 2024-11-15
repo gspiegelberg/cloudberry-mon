@@ -45,7 +45,7 @@ def validate_row(row):
     if  row_ts < target_ts:
         return False, "Discard"
 
-    if row[18].startswith(('connection ', 'statement: ', 'execute ', 'disconnection: ', 'QUERY STATISTICS', 'BIND MESSAGE STATISTICS', 'EXECUTE MESSAGE STATISTICS', 'PARSE MESSAGE STATISTICS')):
+    if row[18].startswith(('connection ', 'statement: ', 'execute ', 'disconnection: ', 'QUERY STATISTICS', 'BIND MESSAGE STATISTICS', 'EXECUTE MESSAGE STATISTICS', 'PARSE MESSAGE STATISTICS', 'Canceling')):
         return True, None
     
     return False, "Discard"
