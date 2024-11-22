@@ -1,0 +1,35 @@
+#
+# 1. Change -c 9 to cluster id of that to load
+#
+# 2. Copy to /etc/systemd/system
+#    sudo install cbmon_loader.service /etc/systemd/system/cbmon_loader-9.service -o root -g root -m 0644
+#
+# 3. Reload
+#    sudo systemctl daemon-reload
+#
+# 4. Start test
+#    sudo systemctl start cbmon_loader-9
+#    ps -ef | grep loader
+#
+# 5. Enable if running
+#    sudo systemctl enable cbmon_loader-9
+#
+[Unit]
+Description=CloudberryDB host metric loader service cluster 15
+After=postgresql-16.service
+
+[Service]
+User=cbmon
+Group=cbmon
+Type=simple
+
+# For cbmon cluster 9
+ExecStart=/usr/local/cbmon/bin/tester -c 15
+Restart=always
+RestartSec=30
+SyslogIdentifier=tester
+KillMode=process
+TimeoutSec=60
+
+[Install]
+WantedBy=multi-user.target
