@@ -11,7 +11,7 @@ INSERT INTO public.cluster_attribs (cluster_id, domain, value) VALUES
 
 CREATE TABLE templates.pings(
         hostname     text,
-        period       timestamptz,
+        period       timestamptz NOT NULL,
         packets_sent int,
         packets_rcvd int,
         errors       int,
@@ -22,6 +22,8 @@ CREATE TABLE templates.pings(
         rtt_max      float,
         rtt_mdev     float
 );
+
+CREATE INDEX ON templates.pings (hostname,period);
 
 
 CREATE OR REPLACE FUNCTION public.ping_test(

@@ -36,7 +36,6 @@ rm -f $outfile
 
 $PSQL -c "SELECT ch.hostname FROM public.cluster_hosts ch JOIN public.clusters c ON (c.id = ch.cluster_id) WHERE c.enabled AND c.id = ${cluster_id}" | sed 's/|/ /g' | while read hostname
 do
-
 	ping -c ${pings} -t ${ttl} ${hostname} > $outfile 2>&1
 
 	if [ $( tail -n 2 $outfile | grep error | wc -l ) -eq 0 ]; then
@@ -48,11 +47,16 @@ do
 		line=$( egrep "packet loss|rtt" $outfile | \
 		awk 'NR%2{printf "%s ",$0;next;}1' )
 	fi
+
 	output=$( echo $line | sed \
 	-e 's/ms rtt min.*mdev =/|/g' \
 	-e 's/[ a-z%+=]//g' \
 	-e 's/[\/,]/|/g' 
 	)
+
+	if [ $( echo $output | awk -F\| '{printf $4}' ) -eq 100 ]; then
+		output="${output}|0|0|0|0"
+	fi
 
 	# cluster_id hostname period packet_loss rtt_min rtt_avg rtt_max rtt_mdev
 	printf "%s|%s|%s\n" "${hostname}" "${ts}" "${output}"

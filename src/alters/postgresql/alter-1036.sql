@@ -65,7 +65,7 @@ BEGIN
 		$eq$ COPY %s.%s FROM PROGRAM %s WITH CSV DELIMITER %s $eq$
 		, cmetrics
 		, v_dsttable
-		, quote_literal(v_command)
+		, quote_literal(command)
 		, quote_literal(v_delimiter)
 	);
 
@@ -121,6 +121,8 @@ BEGIN
 		RAISE DEBUG 'cluster.id %, starting func %', v_cluster_id, func;
 
 		PERFORM * FROM public.check_metric_table( v_cluster_id, tbl );
+		COMMIT;
+
 		sql := format('SELECT * FROM %s(%s, %s::boolean)', func, v_cluster_id, quote_literal(v_prime));
 
 		EXECUTE sql;
