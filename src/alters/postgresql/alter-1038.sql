@@ -12,9 +12,11 @@ INSERT INTO public.alter_requires (alter_id, required) VALUES
  * relacl & relpartbound are not handled well by postgres_fdw
  * remove from existing cat_pg_class ft's
  */
+/*
 DO $$
 DECLARE
-	nsp text
+	nsp text;
+	sql text;
 BEGIN
 	FOR nsp IN
 	SELECT nspname FROM pg_namespace
@@ -33,6 +35,7 @@ BEGIN
 		EXECUTE sql;
 	END LOOP;
 END $$;
+*/
 
 
 CREATE TABLE templates.lock_detail_history(
