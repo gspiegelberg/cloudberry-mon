@@ -44,7 +44,7 @@ from the system are averages between collection periods.
 1. Install sysstat everywhere
    gpssh -f allhosts sudo dnf -y install sysstat
 
-2. Modify to override to once/minute
+2. Modify all cluster hosts to override sysstat-collect.timer to once/minute
    sudo systemctl edit sysstat-collect.timer
 
    Paste:
@@ -54,6 +54,21 @@ from the system are averages between collection periods.
    NOTE in case of automation:
    1. Creates /etc/systemd/system/sysstat-collect.timer.d/override.conf
    2. Reloads systemctl daemon-reload
+
+   Automation:
+cat << EOL > override.conf
+[Timer]
+OnCalendar=*:00/1
+EOL
+
+   gpsync -f allhosts override.conf =:/tmp
+   gpssh -f allhosts sudo mkdir -p /etc/systemd/system/sysstat-collect.timer.d
+   gpssh -f allhosts sudo install -o root -g root -m 0644 /tmp/override.conf /etc/systemd/system/sysstat-collect.timer.d
+   gpssh -f allhosts rm -f /tmp/override.conf
+   gpssh -f allhosts sudo systemctl daemon-reload
+   gpssh -f allhosts sudo systemctl start sysstat-collect.timer
+   gpssh -f allhosts sudo systemctl enable sysstat-collect.timer
+   
 
 3. Copy tar to all hosts
    gpsync -f allhosts cbmon.tar.gz =:/tmp
