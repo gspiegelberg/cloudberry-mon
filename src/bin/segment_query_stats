@@ -1,0 +1,47 @@
+#!/bin/bash
+
+. /usr/local/cbmon/etc/config
+. /usr/local/cloudberry-db/greenplum_path.sh
+
+options="H:"
+
+usage() {
+	msg=""
+	if [ -n "$1" ]; then
+		msg="${1}\n"
+	fi
+
+	cat << EOMSG
+usage: log_reader -H HOURS
+ HOURS is an integer, 0 implies all
+EOMSG
+	exit 1
+}
+
+MMIN=""
+
+if [ "$#" -eq 0 ]; then
+	usage ""
+fi
+
+while getopts $options opt
+do
+	case "$opt" in
+	H)
+		hours="$OPTARG"
+		if [ "$OPTARG" -gt 0 ]; then
+			mins=$(( 60 * "$OPTARG" ))
+			CMIN="-cmin -${mins}"
+		fi
+		;;
+	*)
+		usage "unknown cli argument"
+		;;
+	esac
+done
+
+for csvlog in $( find "${GP_SEG_DATADIR}/log" -type f -name gpdb-\*.csv ${CMIN} -print )
+do
+	/usr/local/cbmon/bin/segment_query_stats_helper.py -l $csvlog -H $hours
+done
+

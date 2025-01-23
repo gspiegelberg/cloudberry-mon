@@ -27,12 +27,18 @@ loginfo "Cleaning gen_status"
 psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
 	-c "DELETE FROM public.gen_status WHERE created < now() - interval'1 week'"
 
+loginfo "Cleaning load_shell_status"
+psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT \
+	-c "DELETE FROM public.load_shell_status WHERE created < now() - interval'1 week'"
+
 # Do a couple full vacuums on select tables
 loginfo "Full vacuums"
 psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT -c "VACUUM FULL gen_status;"
 loginfo "VACUUM FULL gen_status exited with $?"
 psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT -c "VACUUM FULL load_status;"
 loginfo "VACUUM FULL load_status exited with $?"
+psql -qAt -d $PGDATABASE -U $PGUSER -p $PGPORT -c "VACUUM FULL load_shell_status;"
+loginfo "VACUUM FULL load_shell_status exited with $?"
 
 # simple vacuum - with partitions there shouldn't be much bloat
 vacuumdb -d cbmon > /dev/null 2>&1
