@@ -6,6 +6,9 @@
 
 hn=$( hostname )
 
+lsblkout=$( mktemp )
+lsblk -o MOUNTPOINT,SERIAL > $lsblkout 2>&1
+
 df -t xfs | grep -v "Filesystem" | awk '{printf("%s %s\n",$1,$6)}' | while read device mntpt
 do
 	dev=$( basename $device )
@@ -21,7 +24,9 @@ do
 		continue
 	fi
 
-	printf "%s,%s,%s,%s\n" "${hn}" "${device}" "${mntpt}" "${majmin}"
+	serial=$( awk '/\'$mntpt'/ {gsub(/vol/, "vol-", $2); print $2}' $lsblkout )
+
+	printf "%s,%s,%s,%s,%s\n" "${hn}" "${device}" "${mntpt}" "${majmin}" "${serial}"
 done
 
-
+rm -f $lsblkout
