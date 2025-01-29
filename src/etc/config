@@ -10,8 +10,7 @@ LOAD_DELAY=60
 ANALYZE_FREQ=10
 
 # gpseg-1 directory on mdw host
-#MASTER_DATA_DIRECTORY=/data/master/gpseg-1
-MASTER_DATA_DIRECTORY=/data/cbdb/master/gpseg-1
+MASTER_DATA_DIRECTORY=/data1/master/gpseg-1
 
 # Master segment listening port
 CBDBPORT=5432
