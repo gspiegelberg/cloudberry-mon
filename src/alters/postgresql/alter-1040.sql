@@ -18,6 +18,13 @@ BEGIN
 		('__query_stats_24hrs'),
 		('__query_stats_7days') ) AS v(logtbl)
 	LOOP
+		PERFORM n.nspname, c.relname
+		   FROM pg_class c JOIN pg_namespace n ON (c.relnamespace = n.oid)
+		  WHERE c.relname = logtbl AND n.nspname = cmetrics;
+		IF FOUND THEN
+			CONTINUE;
+		END IF;
+
 		EXECUTE format(
 			'IMPORT FOREIGN SCHEMA cbmon LIMIT TO ( %s ) FROM SERVER %s INTO %s'
 			, logtbl, cserver, cmetrics
