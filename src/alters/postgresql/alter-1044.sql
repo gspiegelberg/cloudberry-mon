@@ -29,7 +29,7 @@ BEGIN
 	-- Load everything available if v_prime
 	IF v_prime THEN
 		all_check := false;
-		EXECUTE format('SELECT max(period) < date_trunc('day', now()) FROM %s.%s' , cmetrics, v_metrics)
+		EXECUTE format('SELECT max(period) < date_trunc(''day'', now()) FROM %s.%s' , cmetrics, v_metrics)
 		   INTO all_check;
 		IF all_check THEN
 			-- Verify *_all FDT exists
