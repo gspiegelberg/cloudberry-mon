@@ -8,6 +8,7 @@ logwarn() {
 
 logerror() {
 	_log "ERROR" "$1"
+	[ "$2" -eq 1 ] && exit 1
 }
 
 logdebug() {
@@ -16,7 +17,12 @@ logdebug() {
 }
 
 _log() {
-	# Logging turned off condition
+	if [ ! -d /usr/local/cbmon/logs ]; then
+		mkdir /usr/local/cbmon/logs
+		[ $? -ne 0 ] && printf "unable to create /usr/local/cbmon/logs\n" && exit 1
+	fi
+
+	# Logging turned off
 	[ -z "${LOGFILE}" ] && return 0
 
 	# Log rotation needed test

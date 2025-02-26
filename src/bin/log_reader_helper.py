@@ -47,7 +47,11 @@ def validate_row(row):
 
     if row[18].startswith(('connection ', 'statement: ', 'execute ', 'disconnection: ', 'QUERY STATISTICS', 'BIND MESSAGE STATISTICS', 'EXECUTE MESSAGE STATISTICS', 'PARSE MESSAGE STATISTICS', 'Canceling')):
         return True, None
-    
+
+    # Permit reading of errors
+    if row[17] != "00000":
+        return True, None
+
     return False, "Discard"
 
 

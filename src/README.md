@@ -1,45 +1,61 @@
-Database Metric Gathering & Health Dashboard
+Database Metric Gathering & Health Dashboard Backend
 
 About:
 ========================================================================
 
-MeGaHeDa because I think it's fun & funny. Just a nickname. Will be referred to as cbmon.
+CBmon is a set of scripts & schema to permit observability of one or many
+CloudberryDB clusters in the abscence of Greenplum Command Center (GPCC). Very
+likely can also monitor Greenplum (Broadcom) however equally likely to be
+compatibility issues as one is now closed source.
 
-MeGaHeDa is a set of scripts & schema to permit observability of one or many CloudberryDB
-clusters in the abscence of Greenplum Command Center (GPCC). Could potentially also monitor
-Greenplum (Broadcom) however there will likely be issues with differences between the two.
+Benefits, unlike GPCC, are that this system will catch up even when the database
+is down. It leverages sar logs specifically those created by sysstat 11.7 found
+in RHEL 8 and variants. As long as those files are being written to host metrics
+will eventually appear.
 
-Benefits, unlike GPCC, are that this system will catch up even when the database is down.
-It leverages sar logs specifically those created by sysstat 11.7 found in RHEL 8 and variants.
-As long as those files are being written to host metrics will eventually appear.
+Why not Prometheus? It's a fine product designed to do many things. Desire was
+ease of extensibility without having to learn other tech's or languages,
+maintainable, & live data direct from Cloudberry cluster. Tradeoffs.
+
+Working Configurations:
+========================================================================
+ * RHEL 8 hosts
+ * pre-Apache Cloudberry 1.6.0 & Apache Cloudberry main branch
+ * RHEL 8 based CBmon PostgreSQL
+
+Untested & needs work:
+ * RHEL 9 hosts
+ * Greenplum 6 & 7
+
 
 Features:
 ========================================================================
 
-1. Provides database on which any dashboard can be built (prefer grafana)
+ * Provides database on which any dashboard can be built (prefer grafana)
 
-2. Ability to house data from one or many clusters
+ * Ability to house data from one or many clusters
 
-3. Remote access to Cloudberry catalogs
+ * Remote access to Cloudberry catalogs
 
-4. Method to collect host performance metrics stored in sar files
+ * Method to collect host performance metrics stored in sar files
 
-5. Remote execution of functions in Cloudberry
+ * Remote execution of functions in Cloudberry
 
-6. Easily extensible to pull additional information from remote Cloudberry cluster
+ * Easily extensible to pull additional information from remote Cloudberry
+   cluster
 
-7. Post data load functionality to create summaries or specific data points
+ * Post data load functionality to create summaries or specific data points
 
-8. Data kept as long as necessary
+ * Data kept as long as necessary or wanted
 
-9. Requires only 2 scheduled jobs: data gathering, historical data management
+ * Requires only 2 scheduled jobs: data gathering, historical data management
 
 
 Host Configuration:
 ========================================================================
 
-More frequent intervals for sysstat is recommended otherwise metrics get watered down as many
-from the system are averages between collection periods.
+More frequent intervals for sysstat is recommended otherwise metrics get watered
+down as many from the system are averages between collection periods.
 
 1. Install sysstat everywhere
    gpssh -f allhosts sudo dnf -y install sysstat
@@ -68,7 +84,14 @@ EOL
    gpssh -f allhosts sudo systemctl daemon-reload
    gpssh -f allhosts sudo systemctl start sysstat-collect.timer
    gpssh -f allhosts sudo systemctl enable sysstat-collect.timer
-   
+
+   NOTE for RHEL 9 variants:
+   gpssh -f allhosts sudo systemctl start sysstat
+   gpssh -f allhosts sudo systemctl enable sysstat
+
+   RHEL 8/9 verify: Files shoudl grow once/minute in /var/log/sa
+   ls -l /var/log/sa
+   sar -f /var/log/sa/saDD -b
 
 3. Copy tar to all hosts
    gpsync -f allhosts cbmon.tar.gz =:/tmp
@@ -82,19 +105,14 @@ EOL
 
 Cloudberry Configuration:
 ========================================================================
-1. Create sar database
-    createdb cbmon
-
-2. Change to alters directory
+1. Change to alters directory
     cd /usr/local/cbmon/alters/cloudberry
 
-3. Load each in numeric order
-    psql -d cbmon -f alter-1000.sql
-    psql -d cbmon -f alter-1001.sql
-    psql -d cbmon -f alter-1002.sql
-    psql -d cbmon -f alter-XXXX.sql
+2. Load each in numeric order
+    /usr/local/cbmon/bin/load_cbalters -d MYDB -p PORT -U gpadmin
 
-4. Configure pg_hba.conf to allow remote connections from PostgreSQL host & reload
+3. Configure pg_hba.conf to allow remote connections from PostgreSQL host
+   & reload
     gpstop -u
 
 
