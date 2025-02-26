@@ -1,0 +1,99 @@
+#!/bin/sh
+
+. /usr/local/cbmon/etc/config
+. /usr/local/cbmon/bin/logging
+. /usr/local/cloudberry-db/greenplum_path.sh
+
+options="hc:d:U:p:"
+
+DB_NAME=""
+DB_USER=""
+DB_PORT=""
+CBPATH="/usr/local/cloudberry-db/greenplum_path.sh"
+
+options="hd:U:p:"
+
+usage() {
+	rval="${1:-0}"
+	cat << EOL
+usage: load_cbalters ...
+ -c path    path to nonstandard location of greenplum_path.sh
+            default $CBPATH
+ -h         help
+ -d DBNAME  database name (REQUIRED)
+ -p DBPORT  database port (REQUIRED)
+ -U DBUSER  database user with superuser privilege (REQUIRED)
+EOL
+	exit $rval
+}
+
+while getopts $options opt
+do
+	case "$opt" in
+	c)
+		CBPATH="${OPTARG}"
+		;;
+	d)
+		DB_NAME="${OPTARG}"
+		;;
+	U)
+		DB_USER="${OPTARG}"
+		;;
+	p)
+		DB_PORT="${OPTARG}"
+		;;
+	h)
+		usage 0
+		;;
+	*)
+		;;
+	esac
+done
+
+[ -z "${DB_NAME}" ] && printf "database name required\n" && exit 1
+[ -z "${DB_USER}" ] && printf "database user with superuser required\n" && exit 1
+[ -z "${DB_PORT}" ] && printf "database port required\n" && exit 1
+[ ! -f "${CBPATH}" ] && printf "greenplum_path not found\n" && exit 1
+
+source "${CBPATH}"
+
+PSQL="psql -qAt -d ${DB_NAME} -p ${DB_PORT} -U ${DB_USER}"
+
+
+# cbmon schema exists?
+exists=$( $PSQL -c "SELECT * FROM pg_catalog.pg_namespace WHERE nspname = 'cbmon'" | wc -l )
+
+if [ $exists -ne 0 ]; then
+	# cbmon.alters exists
+	exists=$( $PSQL -c "SELECT * FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON (c.relnamespace = n.oid) WHERE c.relname = 'alters' AND n.nspname = 'cbmon'" | wc -l )
+	if [ $exists -eq 0 ]; then
+		printf "cbmon schema exists but appears inconsistent\n"
+		printf "Recommend DROP SCHEMA cbmon; and run again\n"
+		exit 1
+	fi
+fi
+
+
+log=/tmp/load_cbalters.log
+
+ls /usr/local/cbmon/alters/cloudberry/alter-[1-9]*.sql | sort -n | while read alter
+do
+	alter_id=$( echo $alter | sed -r 's/.*alter-([1-9][0-9][0-9][0-9]).sql$/\1/g' )
+
+	# alter-1000 delivers cbmon.alters
+	if [ "${alter_id}" -gt "1000" ]; then
+		loaded=$( $PSQL -c "SELECT * FROM cbmon.alters WHERE id = ${alter_id}" | wc -l )
+		if [ $loaded -eq 1 ]; then
+			printf "Alter %s already loaded, skipping\n" "${alter_id}"
+			continue
+		fi
+	fi
+
+	printf "Applying alter %s\n" "${alter_id}" | tee -a "${log}"
+	$PSQL -f "$alter" >> "${log}" 2>&1
+	if [ $? -ne 0 ]; then
+		printf "An error occurred, review %s and try again\n" "${log}"
+		exit 1
+	fi
+done
+
