@@ -24,7 +24,7 @@ Group=cbmon
 Type=simple
 
 # For cbmon cluster 9
-ExecStart=/usr/local/cbmon/bin/loader -c 9
+ExecStart=/usr/local/cbmon/bin/loader.bash -c 9
 Restart=always
 RestartSec=30
 SyslogIdentifier=loader
