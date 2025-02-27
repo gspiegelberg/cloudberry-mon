@@ -19,11 +19,5 @@ CBDBPORT=5432
 # Uncomment for debug output
 #DEBUG=1
 
-# loader log file
-LOGFILE=/usr/local/cbmon/logs/loader.log
-
 # summaries log file
 SUMLOGFILE=/usr/local/cbmon/logs/summaries.log
-
-# Rotate if larger than 1MB
-LOGMAXSIZE=1024000
