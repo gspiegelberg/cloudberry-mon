@@ -5,6 +5,7 @@ INSERT INTO public.alters (id,summary) VALUES
 
 
 CREATE TABLE templates.query_stats_summary(
+	hostname        text,
 	period           timestamptz NOT NULL,
 	period_interval  int,
 	username         varchar(256),
@@ -32,6 +33,7 @@ DECLARE
 	way_behind   boolean;
 	qs_table     text;
 	max_period   timestamptz;
+	sql           text;
 BEGIN
 	cmetrics := public.cluster_metrics_schema( v_cluster_id );
 
@@ -74,8 +76,8 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-INSERT INTO public.gen_functions (funcname,tablename,priority,enabled,fdwtable,priority,frequency)
-VALUES ( 'public.gen_query_stats_summary', 'query_stats_summary', 1, true, '', 1, 900 );
+INSERT INTO public.gen_functions (funcname, tablename, priority, enabled, fdwtable, frequency)
+VALUES ( 'public.gen_query_stats_summary', 'query_stats_summary', 1, true, '', 900 );
 
 
 COMMIT;
