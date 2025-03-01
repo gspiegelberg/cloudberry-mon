@@ -40,7 +40,7 @@ class load_function_message:
         return False
 
     def _bool_test(self, var):
-        if isinstance(var, boolean):
+        if isinstance(var, bool):
             return True
         return False
 
