@@ -5,13 +5,33 @@
 
 import os
 import pika
+import argparse
 import configparser
 
-#
+
+parser = argparse.ArgumentParser(
+        description=""
+        , formatter_class=argparse.RawDescriptionHelpFormatter
+)
+
+parser.add_argument(
+        "-c", "--config"
+        , help = "Path to configuration file (required)"
+        , type = str
+)
+
+args = parser.parse_args()
+
+CONFIG = args.config
+
+# Load configuration
 config = configparser.ConfigParser()
+"""
 config_dir = os.path.dirname(__file__) + "/../etc"
 config_file_path = os.path.join( config_dir, 'config.ini')
 config.read(config_file_path)
+"""
+config.read( CONFIG )
 
 MAX_WORKERS = int( config.get('cbmon_load', 'max_workers') )
 JOB_QUEUE   = config.get('cbmon_load', 'job_queue')
@@ -50,7 +70,7 @@ channel.basic_publish(
     body = jsstr
 )
 
-print(" [x] Sent")
+print("Sent stop message")
 
 connection.close()
 
