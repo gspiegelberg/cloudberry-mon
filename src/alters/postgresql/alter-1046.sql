@@ -90,7 +90,7 @@ BEGIN
 		 WHERE load_function_id = funcid
 		   AND ( (public.minute_of_week() % frequency) = 0
                          OR v_prime
-                         OR v_override_func)
+                         OR v_override_freq)
 		   AND enabled
 		 ORDER BY priority DESC
 		LOOP
