@@ -19,10 +19,10 @@ import configparser
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from load_function_message import load_function_message, MessageException
-from control_message import control_message
+from control_message import control_message, MessageException
 
 logger = logging.getLogger(__name__)
-
+running_functions = {}
 
 def process_message(message):
     def pgconnect():
@@ -79,44 +79,45 @@ def callback(ch, method, properties, body):
     # @todo Could do this better leveraging Message class to determine message type
     # Control message
     if "control" in message:
-        if message["control"] == "stop":
-            from control_message import control_message as cm
-            msg = cm( body )
 
-            if not msg.validate():
-                logger.warning( "not a valid control message" )
-                ch.basic_ack(
-                    delivery_tag = method.delivery_tag
-                )
-                return False
+        from control_message import control_message as cm
+        msg = cm( body )
 
-            elif msg.is_stop():
-                messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
-                logger.info( f"told to stop by {messager}")
+        if not msg.validate():
+            logger.warning( "not a valid control message" )
+            ch.basic_ack(
+                delivery_tag = method.delivery_tag
+            )
+            return False
 
-                # @todo Need to wait for all executing threads
+        elif msg.is_stop():
+            messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
+            logger.info( f"told to stop by {messager}")
 
-                # ACK or we'll never be able to start again
-                ch.basic_ack(
-                    delivery_tag = method.delivery_tag
-                )
+            # @todo Need to wait for all executing threads
 
-                exit(0)
+            # ACK or we'll never be able to start again
+            ch.basic_ack(
+                delivery_tag = method.delivery_tag
+            )
 
-    presult = process_pool.apply_async(
-        process_message, args=(message,)
-    )
+            exit(0)
 
-    # @todo Need to wait for process_message to return before ACK
-    #presult.wait()
+    else:
+        presult = process_pool.apply_async(
+            process_message, args=(message,)
+        )
 
-    # @todo if needed, return available via
-    #output = presult.get()
+        # @todo Need to wait for process_message to return before ACK
+        #presult.wait()
 
-    # @todo don't blind ACK message
-    ch.basic_ack(
-        delivery_tag = method.delivery_tag
-    )
+        # @todo if needed, return available via
+        #output = presult.get()
+
+        # @todo don't blind ACK message
+        ch.basic_ack(
+            delivery_tag = method.delivery_tag
+        )
 
 
 def main():
