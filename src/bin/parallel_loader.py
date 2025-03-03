@@ -18,8 +18,8 @@ import argparse
 import configparser
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from load_function_message import load_function_message, MessageException
-from control_message import control_message, MessageException
+from load_function_message import load_function_message as lfm, MessageException
+from control_message import control_message as cm, MessageException
 
 logger = logging.getLogger(__name__)
 running_functions = {}
@@ -62,6 +62,8 @@ def process_message(message):
         if 'pg' in locals() and pg is not None:
             pg.close()
 
+def ack_message(ch):
+    cb.basic_ack( delivery_tag= method.delivery_tag )
 
 def callback(ch, method, properties, body):
     logger.debug( f"Received: {body}" )
@@ -71,23 +73,17 @@ def callback(ch, method, properties, body):
     if message is None:
         # bad json, ack and return
         logger.warning( "received NULL message" )
-        ch.basic_ack(
-            delivery_tag = method.delivery_tag
-        )
+        ack_message(ch)
         return False
 
     # @todo Could do this better leveraging Message class to determine message type
     # Control message
     if "control" in message:
-
-        from control_message import control_message as cm
         msg = cm( body )
 
         if not msg.validate():
             logger.warning( "not a valid control message" )
-            ch.basic_ack(
-                delivery_tag = method.delivery_tag
-            )
+            ack_message(ch)
             return False
 
         elif msg.is_stop():
@@ -97,13 +93,31 @@ def callback(ch, method, properties, body):
             # @todo Need to wait for all executing threads
 
             # ACK or we'll never be able to start again
-            ch.basic_ack(
-                delivery_tag = method.delivery_tag
-            )
+            ack_message(ch)
 
             exit(0)
 
     else:
+        msg = lfm( body )
+
+        if not lfm.validate():
+            logger.warning( "not a valid load function message" )
+            ack_message(ch)
+            return False
+
+        if lfm.get_cluster_id() not in running_functions:
+            # Cluster id not in dict neither is load func id
+            running_functions[lfm.get_cluster_id()] = {}
+            running_functions[lfm.get_cluster_id()][lfm.get_load_function_id()] = True
+        elif lfm.get_load_function_id() in running_functions[lfm.get_cluster_id()]:
+            # Case to prevent duplicate load func's running on same cluster id
+            logger.info( f"ignoring, load function {lfm.get_load_function_id()} for cluster {lfm.get_cluster_id()} already running" )
+            ack_message(ch)
+            return True
+        else:
+            # Cluster id exists and load func id not present
+            running_functions[lfm.get_cluster_id()][lfm.get_load_function_id()] = True
+
         presult = process_pool.apply_async(
             process_message, args=(message,)
         )
@@ -114,10 +128,10 @@ def callback(ch, method, properties, body):
         # @todo if needed, return available via
         #output = presult.get()
 
-        # @todo don't blind ACK message
-        ch.basic_ack(
-            delivery_tag = method.delivery_tag
-        )
+        ack_message(ch)
+
+        # Remove to permit future load func id's
+        running_functions[lfm.get_cluster_id()].pop(lfm.get_load_function_id())
 
 
 def main():
