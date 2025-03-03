@@ -217,12 +217,13 @@ if __name__ == "__main__":
     RMQ_PASS = config.get('rabbitmq', 'pass')
 
     LOG_FILE = config.get('logging', 'file')
+    LOG_LEVEL = config.get('logging', 'level')
 
-    logger.setLevel(logging.DEBUG)  # Set the minimum log level
+    logger.setLevel(getattr(logging, LOG_LEVEL))
 
     # Create a file handler
     file_handler = logging.FileHandler(LOG_FILE)
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(getattr(logging, LOG_LEVEL))
     file_handler = TimedRotatingFileHandler(
         LOG_FILE, when="midnight", interval=1, backupCount=7
     )
