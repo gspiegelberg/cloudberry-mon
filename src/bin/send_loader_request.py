@@ -4,6 +4,7 @@
 #
 
 import pika
+import psycopg2
 import argparse
 import configparser
 from datetime import datetime
