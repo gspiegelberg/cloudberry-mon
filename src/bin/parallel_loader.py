@@ -100,23 +100,23 @@ def callback(ch, method, properties, body):
     else:
         msg = lfm( body )
 
-        if not lfm.validate():
+        if not msg.validate():
             logger.warning( "not a valid load function message" )
             ack_message(ch)
             return False
 
-        if lfm.get_cluster_id() not in running_functions:
+        if msg.get_cluster_id() not in running_functions:
             # Cluster id not in dict neither is load func id
-            running_functions[lfm.get_cluster_id()] = {}
-            running_functions[lfm.get_cluster_id()][lfm.get_load_function_id()] = True
-        elif lfm.get_load_function_id() in running_functions[lfm.get_cluster_id()]:
+            running_functions[msg.get_cluster_id()] = {}
+            running_functions[msg.get_cluster_id()][msg.get_load_function_id()] = True
+        elif msg.get_load_function_id() in running_functions[msg.get_cluster_id()]:
             # Case to prevent duplicate load func's running on same cluster id
-            logger.info( f"ignoring, load function {lfm.get_load_function_id()} for cluster {lfm.get_cluster_id()} already running" )
+            logger.info( f"ignoring, load function {msg.get_load_function_id()} for cluster {msg.get_cluster_id()} already running" )
             ack_message(ch)
             return True
         else:
             # Cluster id exists and load func id not present
-            running_functions[lfm.get_cluster_id()][lfm.get_load_function_id()] = True
+            running_functions[msg.get_cluster_id()][msg.get_load_function_id()] = True
 
         presult = process_pool.apply_async(
             process_message, args=(message,)
@@ -131,7 +131,7 @@ def callback(ch, method, properties, body):
         ack_message(ch)
 
         # Remove to permit future load func id's
-        running_functions[lfm.get_cluster_id()].pop(lfm.get_load_function_id())
+        running_functions[msg.get_cluster_id()].pop(msg.get_load_function_id())
 
 
 def main():
