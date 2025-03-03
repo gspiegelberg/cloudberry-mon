@@ -162,7 +162,7 @@ if not OVERRIDE_FREQ:
 
 cur = pg.cursor()
 
-cur.execute("SELECT id FROM public.load_functions WHERE enabled" + ids_sql + override_freq_sql)
+cur.execute("SELECT id FROM public.load_functions WHERE enabled" + ids_sql + override_freq_sql + " ORDER BY priority DESC")
 
 ids = [r[0] for r in cur.fetchall()]
 for id in ids:
