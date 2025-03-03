@@ -19,6 +19,11 @@ import configparser
 from datetime import datetime
 from load_function_message import load_function_message, MessageException
 from control_message import control_message
+import logging
+from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger(__name__)
 
 
 def process_message(message):
@@ -34,7 +39,7 @@ def process_message(message):
     try:
         pid = os.getpid()
 
-        print(f"{pid:>10}: start {message}.")
+        logger.debug( f"{pid:>10}: start {message}." )
 
         pg = pgconnect()
         cluster_id = message.get("cluster_id")
@@ -49,16 +54,11 @@ def process_message(message):
         )
         pg.commit()
 
-        # Simulate some work
-        #delay = data["delay"]
-        #delay = message["delay"]
-        #time.sleep( delay )
-
-        print(f"{pid:>10}: done {message}.")
+        logger.debug( f"{pid:>10}: done {message}." )
         pg.close()
 
     except psycopg2.Error as e:
-        print(f"{pid:>10}: database error: {e}")
+        logger.error( f"{pid:>10}: database error: {e}" )
 
     finally:
         # Ensure the connection is closed in case of an error
@@ -67,28 +67,33 @@ def process_message(message):
 
 
 def callback(ch, method, properties, body):
-    print(f"Received: {body}")
+    logger.debug( f"Received: {body}" )
 
     message = json.loads( body )
 
     if message is None:
         # bad json, ack and return
+        logger.warning( "received NULL message" )
         ch.basic_ack(
             delivery_tag = method.delivery_tag
         )
         return False
 
-    # Could do this better
+    # @todo Could do this better leveraging Message class to determine message type
     # Control message
     if "control" in message:
         if message["control"] == "stop":
             from control_message import control_message as cm
             msg = cm( body )
+
+            if msg.validate():
+                logger.warning( "not a valid control message" )
+
             if msg.is_stop():
                 messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
-                print( f"told to stop by {messager}")
+                logger.info( f"told to stop by {messager}")
 
-                # Need to wait for all executing threads 
+                # @todo Need to wait for all executing threads
 
                 # ACK or we'll never be able to start again
                 ch.basic_ack(
@@ -96,19 +101,18 @@ def callback(ch, method, properties, body):
                 )
 
                 exit(0)
-            #else: what?
 
     presult = process_pool.apply_async(
         process_message, args=(message,)
     )
 
-    # Need to wait for process_message to return before ACK
+    # @todo Need to wait for process_message to return before ACK
     #presult.wait()
 
-    # if needed, return available via
+    # @todo if needed, return available via
     #output = presult.get()
 
-    # ACK message
+    # @todo don't blind ACK message
     ch.basic_ack(
         delivery_tag = method.delivery_tag
     )
@@ -141,15 +145,16 @@ def main():
                 on_message_callback = callback
             )
             
-            print("Waiting for messages")
+            logger.info("Waiting for messages")
             channel.start_consuming()
 
         except KeyboardInterrupt:
-            print("Stopping consumer...")
+            logger.info("Stopping consumer...")
             break
 
         except pika.exceptions.AMQPConnectionError:
-            print("Connection lost. Reconnecting...")
+            logging.warning("Connection lost. Reconnecting...")
+            # @todo Make config driven
             time.sleep(5)
         finally:
             try:
@@ -189,6 +194,26 @@ if __name__ == "__main__":
     RMQ_HOST    = config.get('rabbitmq', 'host')
     RMQ_USER    = config.get('rabbitmq', 'user')
     RMQ_PASS    = config.get('rabbitmq', 'pass')
+
+    LOG_FILE = config.get('logging', 'file')
+
+    logger.setLevel(logging.DEBUG)  # Set the minimum log level
+
+    # Create a file handler
+    file_handler = logging.FileHandler("test.log")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler = TimedRotatingFileHandler(
+        LOG_FILE, when="midnight", interval=1, backupCount=7
+    )
+    py_name = os.path.basename(__file__)
+    formatter = logging.Formatter('%(asctime)s:' + py_name + ':%(funcName)s():%(levelname)s:%(message)s')
+    file_handler.setFormatter(formatter)
+
+    # Where logs are going, file & console
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.addHandler(file_handler)
 
     # Create a pool of workers
     process_pool = multiprocessing.Pool(
