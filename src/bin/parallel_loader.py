@@ -16,12 +16,10 @@ import psycopg2
 import json
 import argparse
 import configparser
-from datetime import datetime
-from load_function_message import load_function_message, MessageException
-from control_message import control_message
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from logging.handlers import RotatingFileHandler
+from load_function_message import load_function_message, MessageException
+from control_message import control_message
 
 logger = logging.getLogger(__name__)
 
@@ -29,16 +27,15 @@ logger = logging.getLogger(__name__)
 def process_message(message):
     def pgconnect():
         return psycopg2.connect(
-            host     = DBHOST,
-            database = DBNAME,
-            port     = DBPORT,
-            user     = DBUSER,
-            password = DBPASS
+            host=DBHOST,
+            database=DBNAME,
+            port=DBPORT,
+            user=DBUSER,
+            password=DBPASS
         )
 
+    pid = os.getpid()
     try:
-        pid = os.getpid()
-
         logger.debug( f"{pid:>10}: start {message}." )
 
         pg = pgconnect()
@@ -183,24 +180,24 @@ if __name__ == "__main__":
     config.read(CONFIG)
 
     MAX_WORKERS = int( config.get('cbmon_load', 'max_workers') )
-    JOB_QUEUE   = config.get('cbmon_load', 'job_queue')
+    JOB_QUEUE = config.get('cbmon_load', 'job_queue')
 
-    DBNAME      = config.get('cbmondb', 'name')
-    DBUSER      = config.get('cbmondb', 'user')
-    DBPASS      = config.get('cbmondb', 'pass')
-    DBHOST      = config.get('cbmondb', 'host')
-    DBPORT      = int( config.get('cbmondb', 'port') )
+    DBNAME = config.get('cbmondb', 'name')
+    DBUSER = config.get('cbmondb', 'user')
+    DBPASS = config.get('cbmondb', 'pass')
+    DBHOST = config.get('cbmondb', 'host')
+    DBPORT = int( config.get('cbmondb', 'port') )
 
-    RMQ_HOST    = config.get('rabbitmq', 'host')
-    RMQ_USER    = config.get('rabbitmq', 'user')
-    RMQ_PASS    = config.get('rabbitmq', 'pass')
+    RMQ_HOST = config.get('rabbitmq', 'host')
+    RMQ_USER = config.get('rabbitmq', 'user')
+    RMQ_PASS = config.get('rabbitmq', 'pass')
 
     LOG_FILE = config.get('logging', 'file')
 
     logger.setLevel(logging.DEBUG)  # Set the minimum log level
 
     # Create a file handler
-    file_handler = logging.FileHandler("test.log")
+    file_handler = logging.FileHandler(LOG_FILE)
     file_handler.setLevel(logging.DEBUG)
     file_handler = TimedRotatingFileHandler(
         LOG_FILE, when="midnight", interval=1, backupCount=7
@@ -210,9 +207,10 @@ if __name__ == "__main__":
     file_handler.setFormatter(formatter)
 
     # Where logs are going, file & console
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    if config.get('logging', 'console') == 'on':
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
     logger.addHandler(file_handler)
 
     # Create a pool of workers
