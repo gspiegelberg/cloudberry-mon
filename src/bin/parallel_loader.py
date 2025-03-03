@@ -63,7 +63,7 @@ def process_message(message):
             pg.close()
 
 def ack_message(ch):
-    cb.basic_ack( delivery_tag= method.delivery_tag )
+    ch.basic_ack( delivery_tag= method.delivery_tag )
 
 def callback(ch, method, properties, body):
     logger.debug( f"Received: {body}" )
