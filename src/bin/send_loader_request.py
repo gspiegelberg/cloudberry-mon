@@ -154,7 +154,7 @@ pg = psycopg2.connect(
 
 ids_sql = ""
 if not LOAD_ALL:
-	ids_sql = " AND id = " + LOAD_FUNCTION_ID
+	ids_sql = " AND id = " + str(LOAD_FUNCTION_ID)
 
 override_freq_sql = ""
 if not OVERRIDE_FREQ:
