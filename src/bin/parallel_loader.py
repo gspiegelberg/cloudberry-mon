@@ -83,10 +83,14 @@ def callback(ch, method, properties, body):
             from control_message import control_message as cm
             msg = cm( body )
 
-            if msg.validate():
+            if not msg.validate():
                 logger.warning( "not a valid control message" )
+                ch.basic_ack(
+                    delivery_tag = method.delivery_tag
+                )
+                return False
 
-            if msg.is_stop():
+            elif msg.is_stop():
                 messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
                 logger.info( f"told to stop by {messager}")
 
