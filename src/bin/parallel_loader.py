@@ -53,17 +53,31 @@ def process_message(message):
 
         logger.debug( f"{pid:>10}: done {message}." )
         pg.close()
+        rval = True
 
     except psycopg2.Error as e:
         logger.error( f"{pid:>10}: database error: {e}" )
+        rval = False
+        pass
 
     finally:
         # Ensure the connection is closed in case of an error
         if 'pg' in locals() and pg is not None:
             pg.close()
+        rval = False
+        pass
+
+    return {"cluster_id": cluster_id, "load_function_id": load_function_id, "rval": rval}
+
 
 def ack_message(ch, method):
-    ch.basic_ack( delivery_tag= method.delivery_tag )
+    ch.basic_ack( delivery_tag = method.delivery_tag )
+
+
+def process_callback(result):
+    # Remove to permit future load func id's
+    running_functions[result["cluster_id"]].pop(result["load_function_id"])
+
 
 def callback(ch, method, properties, body):
     logger.debug( f"Received: {body}" )
@@ -72,7 +86,7 @@ def callback(ch, method, properties, body):
 
     if message is None:
         # bad json, ack and return
-        logger.warning( "received NULL message" )
+        logger.warning( "received empty message" )
         ack_message(ch, method)
         return False
 
@@ -119,19 +133,10 @@ def callback(ch, method, properties, body):
             running_functions[msg.get_cluster_id()][msg.get_load_function_id()] = True
 
         presult = process_pool.apply_async(
-            process_message, args=(message,)
+            process_message, args=(message,), callback=process_callback
         )
 
-        # @todo Need to wait for process_message to return before ACK
-        #presult.wait()
-
-        # @todo if needed, return available via
-        #output = presult.get()
-
         ack_message(ch, method)
-
-        # Remove to permit future load func id's
-        running_functions[msg.get_cluster_id()].pop(msg.get_load_function_id())
 
 
 def main():
