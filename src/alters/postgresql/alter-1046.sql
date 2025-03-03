@@ -119,7 +119,7 @@ BEGIN
 			VALUES (v_cluster_id, funcid, start, finish, status, ts_txstart);
 		END LOOP;
 
-		COMMIT;
+		-- COMMIT;
 	END LOOP;
 
 	IF v_analyze THEN
