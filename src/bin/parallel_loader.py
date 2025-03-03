@@ -62,7 +62,7 @@ def process_message(message):
         if 'pg' in locals() and pg is not None:
             pg.close()
 
-def ack_message(ch):
+def ack_message(ch, method):
     ch.basic_ack( delivery_tag= method.delivery_tag )
 
 def callback(ch, method, properties, body):
@@ -73,7 +73,7 @@ def callback(ch, method, properties, body):
     if message is None:
         # bad json, ack and return
         logger.warning( "received NULL message" )
-        ack_message(ch)
+        ack_message(ch, method)
         return False
 
     # @todo Could do this better leveraging Message class to determine message type
@@ -83,7 +83,7 @@ def callback(ch, method, properties, body):
 
         if not msg.validate():
             logger.warning( "not a valid control message" )
-            ack_message(ch)
+            ack_message(ch, method)
             return False
 
         elif msg.is_stop():
@@ -93,7 +93,7 @@ def callback(ch, method, properties, body):
             # @todo Need to wait for all executing threads
 
             # ACK or we'll never be able to start again
-            ack_message(ch)
+            ack_message(ch, method)
 
             exit(0)
 
@@ -102,7 +102,7 @@ def callback(ch, method, properties, body):
 
         if not msg.validate():
             logger.warning( "not a valid load function message" )
-            ack_message(ch)
+            ack_message(ch, method)
             return False
 
         if msg.get_cluster_id() not in running_functions:
@@ -112,7 +112,7 @@ def callback(ch, method, properties, body):
         elif msg.get_load_function_id() in running_functions[msg.get_cluster_id()]:
             # Case to prevent duplicate load func's running on same cluster id
             logger.info( f"ignoring, load function {msg.get_load_function_id()} for cluster {msg.get_cluster_id()} already running" )
-            ack_message(ch)
+            ack_message(ch, method)
             return True
         else:
             # Cluster id exists and load func id not present
@@ -128,7 +128,7 @@ def callback(ch, method, properties, body):
         # @todo if needed, return available via
         #output = presult.get()
 
-        ack_message(ch)
+        ack_message(ch, method)
 
         # Remove to permit future load func id's
         running_functions[msg.get_cluster_id()].pop(msg.get_load_function_id())
