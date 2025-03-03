@@ -3,18 +3,14 @@
 # Send work to parallel_loader
 #
 
-import os
 import pika
-import json
 import argparse
 import configparser
 from datetime import datetime
 
-
 DEF_OVERRIDE_FREQ = False
 DEF_ANALYZE       = False
 DEF_PRIME         = False
-
 
 parser = argparse.ArgumentParser(
 	description=""
@@ -57,6 +53,12 @@ parser.add_argument(
 	, action = 'store_true'
 )
 
+parser.add_argument(
+	"--load-all"
+	, help = "Send load request for all enabled functions (optional)"
+	, action = 'store_true'
+)
+
 args = parser.parse_args()
 
 CONFIG = args.config
@@ -65,15 +67,10 @@ LOAD_FUNCTION_ID = args.load_function_id
 OVERRIDE_FREQ = args.override_freq
 ANALYZE = args.analyze
 PRIME = args.prime
-
+LOAD_ALL = args.load_all
 
 # Load configuration
 config = configparser.ConfigParser()
-"""
-config_dir = os.path.dirname(__file__) + "/../etc"
-config_file_path = os.path.join( config_dir, 'config.ini')
-config.read(config_file_path)
-"""
 config.read( CONFIG )
 
 RMQ_HOST    = config.get('rabbitmq', 'host')
@@ -125,24 +122,52 @@ implemented contract that is ideally a common message class capable of
  3) digesting and validating message
 """
 
+def send(ch, queue, message):
+	ch.basic_publish(
+		exchange = '',
+		routing_key = queue,
+		body = message
+	)
+
 from load_function_message import load_function_message as lfm
 
 msg = lfm()
 msg.set_cluster_id( CLUSTER_ID )
-msg.set_load_function_id( LOAD_FUNCTION_ID )
 msg.set_override_freq( OVERRIDE_FREQ )
 msg.set_analyze( ANALYZE )
 msg.set_prime( PRIME )
-jsstr = msg.as_str()
 
+DBNAME = config.get('cbmondb', 'name')
+DBUSER = config.get('cbmondb', 'user')
+DBPASS = config.get('cbmondb', 'pass')
+DBHOST = config.get('cbmondb', 'host')
+DBPORT = int(config.get('cbmondb', 'port'))
 
-channel.basic_publish(
-    exchange = '',
-    routing_key = ROUTING_KEY,
-    body = jsstr
+pg = psycopg2.connect(
+	host=DBHOST,
+	database=DBNAME,
+	port=DBPORT,
+	user=DBUSER,
+	password=DBPASS
 )
 
-print(" [x] Sent")
+ids_sql = ""
+if not LOAD_ALL:
+	ids_sql = " AND id = " + LOAD_FUNCTION_ID
+
+override_freq_sql = ""
+if not OVERRIDE_FREQ:
+	override_freq_sql = " AND extract(epoch from now())::int % frequency = 0"
+
+cur = pg.cursor()
+
+cur.execute("SELECT id FROM public.load_functions WHERE enabled" + ids_sql + override_freq_sql)
+
+ids = [r[0] for r in cur.fetchall()]
+for id in ids:
+	msg.set_load_function_id(id)
+	send(channel, ROUTING_KEY, msg.as_str())
+	print(f"Sent load request for load function {id}")
 
 connection.close()
 
