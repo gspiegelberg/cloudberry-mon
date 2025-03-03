@@ -14,10 +14,11 @@ import time
 import pika
 import psycopg2
 import json
-from datetime import datetime
-
+import argparse
 import configparser
-
+from datetime import datetime
+from load_function_message import load_function_message, MessageException
+from control_message import control_message
 
 
 def process_message(message):
@@ -157,11 +158,25 @@ def main():
                 pass
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        description=""
+        , formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    parser.add_argument(
+        "-c", "--config"
+        , help="Path to configuration file (required)"
+        , type=str
+    )
+
+    args = parser.parse_args()
+
     # configuration
+    CONFIG = args.config
     config = configparser.ConfigParser()
-    config_file_path = os.path.join( '/home/gspiegel/src/cloudberry-mon/src/wip', 'config.ini')
-    config.read(config_file_path)
-    
+    config.read(CONFIG)
+
     MAX_WORKERS = int( config.get('cbmon_load', 'max_workers') )
     JOB_QUEUE   = config.get('cbmon_load', 'job_queue')
 
