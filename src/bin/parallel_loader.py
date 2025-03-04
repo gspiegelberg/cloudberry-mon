@@ -36,47 +36,53 @@ def process_message(message):
 
     pid = os.getpid()
     try:
-        logger.debug( f"{pid:>10}: start {message}." )
 
-        pg = pgconnect()
         cluster_id = message.get("cluster_id")
-        load_function_id = message.get("cluster_id")
+        load_function_id = message.get("load_function_id")
         override_freq = message.get("override_freq")
         analyze = message.get("analyze")
         prime = message.get("prime")
+        logger.debug( f"{pid}: start ({cluster_id}, {load_function_id})" )
 
+        pg = pgconnect()
         cur = pg.cursor()
         cur.execute("CALL public.load(%s, %s, %s, %s, %s);",
             (cluster_id, analyze, prime, load_function_id, override_freq)
         )
         pg.commit()
 
-        logger.debug( f"{pid:>10}: done {message}." )
+        logger.debug( f"{pid}: done ({cluster_id}, {load_function_id})" )
         pg.close()
         rval = True
+        pass
 
     except psycopg2.Error as e:
         logger.error( f"{pid:>10}: database error: {e}" )
-        rval = False
         pass
 
     finally:
         # Ensure the connection is closed in case of an error
         if 'pg' in locals() and pg is not None:
             pg.close()
-        rval = False
         pass
 
-    return {"cluster_id": cluster_id, "load_function_id": load_function_id, "rval": rval}
+    # Must return serializable result
+    return make_work(cluster_id, load_function_id)
+
+
+def make_work(cluster_id, load_function_id):
+    return (cluster_id, load_function_id )
+
+
+def process_callback(result):
+    global running_functions
+    logger.debug( f"popping {result} {running_functions}" )
+    x = running_functions[result[0]].pop( result[1] )
+    logger.debug( f"popped {x}" )
 
 
 def ack_message(ch, method):
     ch.basic_ack( delivery_tag = method.delivery_tag )
-
-
-def process_callback(result):
-    # Remove to permit future load func id's
-    running_functions[result["cluster_id"]].pop(result["load_function_id"])
 
 
 def callback(ch, method, properties, body):
@@ -119,6 +125,13 @@ def callback(ch, method, properties, body):
             ack_message(ch, method)
             return False
 
+        work = make_work( msg.get_cluster_id(), msg.get_load_function_id() )
+        logger.debug( f"work: {work}" )
+        logger.debug( f"before: {running_functions}" )
+
+        """
+        Could be less complicated but may store additional info in dict later
+        """
         if msg.get_cluster_id() not in running_functions:
             # Cluster id not in dict neither is load func id
             running_functions[msg.get_cluster_id()] = {}
@@ -132,8 +145,12 @@ def callback(ch, method, properties, body):
             # Cluster id exists and load func id not present
             running_functions[msg.get_cluster_id()][msg.get_load_function_id()] = True
 
+        logger.debug( f"after: {running_functions}" )
+
         presult = process_pool.apply_async(
-            process_message, args=(message,), callback=process_callback
+            process_message,
+            args=(message,),
+            callback=process_callback
         )
 
         ack_message(ch, method)
