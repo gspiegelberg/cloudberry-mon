@@ -24,11 +24,20 @@ class control_message(Message):
     def stop(self):
         return Message._set(self, "control", "stop")
 
+    def ping(self, response_queue):
+        return (Message._set(self, "response_queue", response_queue) and Message._set(self, "control", "ping") )
+
     """
     Consumer methods
     """
     def is_stop(self):
         if "control" in self.message:
             if self.message["control"] == "stop":
+                return True
+        return False
+
+    def is_ping(self):
+        if "control" in self.message:
+            if self.message["control"] == "ping"
                 return True
         return False

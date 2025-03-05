@@ -87,6 +87,8 @@ def process_callback(result):
 def ack_message(ch, method):
     ch.basic_ack( delivery_tag = method.delivery_tag )
 
+def send_message(queue, body):
+    pass
 
 def callback(ch, method, properties, body):
     logger.debug( f"Received: {body}" )
@@ -108,6 +110,15 @@ def callback(ch, method, properties, body):
             logger.warning( "not a valid control message" )
             ack_message(ch, method)
             return False
+
+        elif msg.is_ping():
+            logger.debug( f"ping received" )
+            ack_message(ch, method)
+            if time.time() - msg.req_ts <= ttl:
+                # assume sender is waiting for a response, else ignore
+                send_message( msg.get("response_queue") )
+                pass
+            return True
 
         elif msg.is_stop():
             messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
