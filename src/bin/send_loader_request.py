@@ -5,6 +5,7 @@ Send work to parallel_loader
 @todo if parallel_loader is stopped, how to detect so as to not overproduce messages?
 """
 
+import os
 import pika
 import psycopg2
 import argparse
