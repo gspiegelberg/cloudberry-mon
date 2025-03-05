@@ -35,15 +35,18 @@ def process_message(message):
         )
 
     pid = os.getpid()
+
+    cluster_id = message.get("cluster_id")
+    load_function_id = message.get("load_function_id")
+    override_freq = message.get("override_freq")
+    analyze = message.get("analyze")
+    prime = message.get("prime")
+    logger.debug(f"{pid}: start ({cluster_id}, {load_function_id})")
+
     try:
-
-        cluster_id = message.get("cluster_id")
-        load_function_id = message.get("load_function_id")
-        override_freq = message.get("override_freq")
-        analyze = message.get("analyze")
-        prime = message.get("prime")
-        logger.debug( f"{pid}: start ({cluster_id}, {load_function_id})" )
-
+        """
+        @todo need pre-load test detecting if cluster_id is down 
+        """
         pg = pgconnect()
         cur = pg.cursor()
         cur.execute("CALL public.load(%s, %s, %s, %s, %s);",
@@ -147,12 +150,18 @@ def callback(ch, method, properties, body):
 
         logger.debug( f"after: {running_functions}" )
 
-        presult = process_pool.apply_async(
+        process_pool.apply_async(
             process_message,
             args=(message,),
             callback=process_callback
         )
 
+        """
+        Fire & forget, not thrilled by it. Rather worker process perform ack however
+        within the confines and purpose of this script fire & forget is not the end
+        of the world. Another message will come soon enough to do the same work.
+        Better to ack here than have a backlog of messages with one blocking. 
+        """
         ack_message(ch, method)
 
 
@@ -233,8 +242,11 @@ if __name__ == "__main__":
     RMQ_USER = config.get('rabbitmq', 'user')
     RMQ_PASS = config.get('rabbitmq', 'pass')
 
-    LOG_FILE = config.get('logging', 'file')
+    LOG_DIR = config.get('logging', 'dir')
     LOG_LEVEL = config.get('logging', 'level')
+
+    py_name = os.path.basename(__file__)
+    LOG_FILE = LOG_DIR + '/' + py_name + '.log'
 
     logger.setLevel(getattr(logging, LOG_LEVEL))
 
@@ -244,7 +256,6 @@ if __name__ == "__main__":
     file_handler = TimedRotatingFileHandler(
         LOG_FILE, when="midnight", interval=1, backupCount=7
     )
-    py_name = os.path.basename(__file__)
     formatter = logging.Formatter('%(asctime)s:' + py_name + ':%(funcName)s():%(levelname)s:%(message)s')
     file_handler.setFormatter(formatter)
 
