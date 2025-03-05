@@ -38,6 +38,6 @@ class control_message(Message):
 
     def is_ping(self):
         if "control" in self.message:
-            if self.message["control"] == "ping"
+            if self.message["control"] == "ping":
                 return True
         return False
