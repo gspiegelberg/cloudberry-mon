@@ -7,7 +7,7 @@ User=cbmon
 Group=cbmon
 Type=simple
 
-ExecStart=/usr/local/cbmon/bin/parallel_loader.py --config /usr/local/cbmon/etc/config.ini
+ExecStart=/usr/local/cbmon/bin/parallel_loader --config /usr/local/cbmon/etc/config.ini
 Restart=always
 RestartSec=30
 SyslogIdentifier=parallel_loader
