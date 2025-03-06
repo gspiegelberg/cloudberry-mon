@@ -87,6 +87,7 @@ if __name__ == "__main__":
 	RMQ_HOST = config.get('rabbitmq', 'host')
 	RMQ_USER = config.get('rabbitmq', 'user')
 	RMQ_PASS = config.get('rabbitmq', 'pass')
+	RMQ_TTL = config.get('rabbitmq', 'ttl')
 	JOB_QUEUE = config.get('cbmon_load', 'job_queue')
 	ROUTING_KEY = JOB_QUEUE
 
@@ -164,9 +165,6 @@ if __name__ == "__main__":
 			logger.error(f"pika/RabbitMQ connection error: {e}")
 			exit(1)
 
-		# @todo move hardcoded ttl to config
-		ttl = 30
-
 		"""
 		Send ping request to main queue, message TTL = 30 seconds
 		"""
@@ -174,18 +172,18 @@ if __name__ == "__main__":
 		msg.ping( resp_q )
 		logger.debug( f"sending ping request" )
 		send( ch, queue, msg.as_str(),
-			  pika.BasicProperties( expiration = str( ttl * 1000) )
+			  pika.BasicProperties( expiration = str( RMQ_TTL * 1000) )
 		)
 
 		logger.debug( f"waiting for ping ack on {resp_q}" )
 		start_ts = time.time()
 
 		body = None
-		for method, properties, body in ping_ch.consume( queue = resp_q, inactivity_timeout = ttl ):
+		for method, properties, body in ping_ch.consume( queue = resp_q, inactivity_timeout = RMQ_TTL ):
 			if method is None:
 				break
 			ping_ch.basic_ack( method.delivery_tag )
-			if time.time() - start_ts > ttl:
+			if time.time() - start_ts > RMQ_TTL:
 				logger.warning( f"timed out waiting for ping ack" )
 				break
 

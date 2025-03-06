@@ -114,7 +114,7 @@ def callback(ch, method, properties, body):
 
         elif msg.is_ping():
             logger.debug( f"ping received" )
-            if time.time() - msg.req_ts <= ttl:
+            if time.time() - msg.req_ts <= RMQ_TTL:
                 # assume sender is waiting for a response, else ignore
                 send_message( msg.get("response_queue") )
                 pass
@@ -249,6 +249,7 @@ if __name__ == "__main__":
     RMQ_HOST = config.get('rabbitmq', 'host')
     RMQ_USER = config.get('rabbitmq', 'user')
     RMQ_PASS = config.get('rabbitmq', 'pass')
+    RMQ_TTL = config.get('rabbitmq', 'ttl')
 
     LOG_DIR = config.get('logging', 'dir')
     LOG_LEVEL = config.get('logging', 'level')
