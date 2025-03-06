@@ -114,7 +114,7 @@ def callback(ch, method, properties, body):
 
         elif msg.is_ping():
             logger.debug( f"ping received" )
-            if time.time() - msg.req_ts <= RMQ_TTL:
+            if time.time() - float(msg.req_ts()) <= RMQ_TTL:
                 # assume sender is waiting for a response, else ignore
                 send_message( msg.get("response_queue") )
                 pass
