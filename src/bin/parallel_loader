@@ -249,7 +249,7 @@ if __name__ == "__main__":
     RMQ_HOST = config.get('rabbitmq', 'host')
     RMQ_USER = config.get('rabbitmq', 'user')
     RMQ_PASS = config.get('rabbitmq', 'pass')
-    RMQ_TTL = config.get('rabbitmq', 'ttl')
+    RMQ_TTL  = int(config.get('rabbitmq', 'ttl'))
 
     LOG_DIR = config.get('logging', 'dir')
     LOG_LEVEL = config.get('logging', 'level')

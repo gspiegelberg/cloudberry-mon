@@ -87,7 +87,7 @@ if __name__ == "__main__":
 	RMQ_HOST = config.get('rabbitmq', 'host')
 	RMQ_USER = config.get('rabbitmq', 'user')
 	RMQ_PASS = config.get('rabbitmq', 'pass')
-	RMQ_TTL = config.get('rabbitmq', 'ttl')
+	RMQ_TTL  = int(config.get('rabbitmq', 'ttl'))
 	JOB_QUEUE = config.get('cbmon_load', 'job_queue')
 	ROUTING_KEY = JOB_QUEUE
 
