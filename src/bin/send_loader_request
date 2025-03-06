@@ -171,7 +171,7 @@ if __name__ == "__main__":
 		Send ping request to main queue, message TTL = 30 seconds
 		"""
 		msg = cm()
-		msg.ping( resp_q, ttl )
+		msg.ping( resp_q )
 		logger.debug( f"sending ping request" )
 		send( ch, queue, msg.as_str(),
 			  pika.BasicProperties( expiration = str( ttl * 1000) )
