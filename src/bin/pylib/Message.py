@@ -49,11 +49,12 @@ class Message(object):
         return sha256(json.dumps(self.message, sort_keys=True).encode('utf-8')).hexdigest()
 
     def _validate(self):
-        if self._validated:
-            return True
         if self.message["msgid"] is None:
             return False
         if self.digesting:
+            if hasattr(self, '_validated'):
+                if self._validated:
+                    return True
             msgparts = self.message["msgid"].split(":")
             self.caller = {
                 "host": msgparts[0],

@@ -136,10 +136,12 @@ if __name__ == "__main__":
 	 3) digesting and validating message
 	"""
 
-	def loader_alive(ch, queue, message):
+	def loader_alive(ch, queue):
 		from control_message import control_message as cm
 
 		resp_q = f"send_loader_request_c{CLUSTER_ID}"
+		logger.debug( f"sending ping request, response queue: {resp_q}" )
+
 		try:
 			ping_conn = pika.BlockingConnection(
 				pika.ConnectionParameters(
@@ -157,7 +159,7 @@ if __name__ == "__main__":
 				durable = False
 			)
 			ping_ch.basic_qos(prefetch_count=1)
-			ping_ch.basic_consume(queue=resp_q)
+			#ping_ch.basic_consume(queue=resp_q)
 		except pika.exceptions as e:
 			logger.error(f"pika/RabbitMQ connection error: {e}")
 			exit(1)
@@ -170,12 +172,12 @@ if __name__ == "__main__":
 		"""
 		msg = cm()
 		msg.ping( resp_q, ttl )
-		logger.debug("waiting for ping ack")
+		logger.debug( f"sending ping request" )
 		send( ch, queue, msg.as_str(),
 			  pika.BasicProperties( expiration = str( ttl * 1000) )
 		)
 
-		logger.debug("waiting for ping ack")
+		logger.debug( f"waiting for ping ack on {resp_q}" )
 		start_ts = time.time()
 
 		body = None
@@ -189,8 +191,10 @@ if __name__ == "__main__":
 		ping_conn.close()
 
 		if body is None:
+			logger.debug( f"ping response did not come" )
 			return False
 
+		logger.debug( f"ping response received" )
 		return True
 
 
@@ -232,6 +236,11 @@ if __name__ == "__main__":
 		ch.setFormatter(formatter)
 		logger.addHandler(ch)
 	logger.addHandler(file_handler)
+
+	""" Check if parallel_loader is available """
+	if not loader_alive(channel, JOB_QUEUE):
+		logger.warning( f"parallel_loader not running, exiting" )
+		exit(1)
 
 	# Create message
 	from load_function_message import load_function_message as lfm
