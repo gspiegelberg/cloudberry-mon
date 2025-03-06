@@ -105,15 +105,15 @@ def callback(ch, method, properties, body):
     # Control message
     if "control" in message:
         msg = cm( body )
+        """ ACK, all actions will be done immediately """
+        ack_message(ch, method)
 
         if not msg.validate():
-            logger.warning( "not a valid control message" )
-            ack_message(ch, method)
+            logger.warning( f"not a valid control message" )
             return False
 
         elif msg.is_ping():
             logger.debug( f"ping received" )
-            ack_message(ch, method)
             if time.time() - msg.req_ts <= ttl:
                 # assume sender is waiting for a response, else ignore
                 send_message( msg.get("response_queue") )
@@ -124,11 +124,7 @@ def callback(ch, method, properties, body):
             messager = msg.req_user()+'@'+msg.req_host()+' at '+str(msg.req_ts())
             logger.info( f"told to stop by {messager}")
 
-            # @todo Need to wait for all executing threads
-
-            # ACK or we'll never be able to start again
-            ack_message(ch, method)
-
+            # @todo Wait for all executing threads?
             exit(0)
 
     else:
@@ -191,7 +187,8 @@ def main():
             channel = connection.channel()
             channel.queue_declare(
                 queue = JOB_QUEUE,
-                durable = True
+                durable = True,
+                arguments = {'x-max-priority': 10}
             )
             
             channel.basic_qos(

@@ -103,8 +103,9 @@ if __name__ == "__main__":
 		channel = connection.channel()
 
 		channel.queue_declare(
-			queue=JOB_QUEUE,
-			durable=True
+			queue = JOB_QUEUE,
+			durable = True,
+			arguments={'x-max-priority': 10}
 		)
 	except pika.exceptions as e:
 		logger.error( f"pika/RabbitMQ connection error: {e}" )

@@ -22,9 +22,8 @@ class Message(object):
             # Digesting a received message
             self.digesting = True
             self.message = json.loads(message)
-            self._validated = False
-            if self._validate():
-                self._validated = True
+            self._validated = self._validate()
+
 
     """
     General purpose internal methods
@@ -42,6 +41,7 @@ class Message(object):
     def _set(self, var, val):
         if self.digesting:
             raise MessageException( f"cannot change message" )
+        self._validated = False
         self.message[var] = val
         return True
 
@@ -49,10 +49,11 @@ class Message(object):
         return sha256(json.dumps(self.message, sort_keys=True).encode('utf-8')).hexdigest()
 
     def _validate(self):
+        if self._validated:
+            return True
         if self.message["msgid"] is None:
             return False
         if self.digesting:
-
             msgparts = self.message["msgid"].split(":")
             self.caller = {
                 "host": msgparts[0],
@@ -61,9 +62,13 @@ class Message(object):
             }
 
             """ Need hash and removed from message to validate """
-            hash = self.message["x-hash"]
-            if hash == self._hash():
-                """ Not a validated message, do not raise exception """
+            try:
+                self.xhash = self.message.pop("x-hash")
+                if hash == self._hash():
+                    """ Not a validated message, do not raise exception """
+                    return False
+            except KeyError:
+                """ Not a valid message, missing x-hash """
                 return False
         return True
 

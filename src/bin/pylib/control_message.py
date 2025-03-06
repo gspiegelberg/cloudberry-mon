@@ -8,9 +8,11 @@ from Message import Message, MessageException
 class control_message(Message):
     def __init__(self, message = None):
         Message.__init___(self, message)
+        """
         if message is None:
             # Defaults
             Message._set(self, "control", None)
+        """
 
     def validate(self):
         # Required
