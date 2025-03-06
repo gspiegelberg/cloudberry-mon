@@ -182,6 +182,8 @@ if __name__ == "__main__":
 
 		body = None
 		for method, properties, body in ping_ch.consume( queue = resp_q, inactivity_timeout = ttl ):
+			if method is None:
+				break
 			ping_ch.basic_ack( method.delivery_tag )
 			if time.time() - start_ts > ttl:
 				logger.warning( f"timed out waiting for ping ack" )
