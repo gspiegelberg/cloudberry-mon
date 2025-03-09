@@ -85,8 +85,8 @@ class Message(object):
     Consumer methods
     """
     def get(self, element):
-        if not self.validated:
-            raise MessageException( f"not a valid message" )
+        #if not self._validated:
+        #    raise MessageException( f"not a valid message" )
         if element not in self.message:
             raise MessageException( f"element {element} not in message" )
         return self.message[element]

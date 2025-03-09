@@ -12,6 +12,7 @@ import os
 import multiprocessing
 import time
 import pika
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import psycopg2
 import json
 import argparse
@@ -87,8 +88,44 @@ def process_callback(result):
 def ack_message(ch, method):
     ch.basic_ack( delivery_tag = method.delivery_tag )
 
-def send_message(queue, body):
-    pass
+def send_ping_response(queue, msgid):
+    try:
+        creds = pika.PlainCredentials( RMQ_USER, RMQ_PASS )
+        ping_conn = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host=RMQ_HOST,
+                credentials=creds
+            )
+        )
+
+        ping_ch = ping_conn.channel()
+        ping_ch.queue_declare(
+             queue = queue,
+             durable = False
+        )
+
+        logger.debug( f"sending ping response on queue {queue}" )
+        msg = cm()
+        msg.ping_ack( msgid )
+        ping_ch.basic_publish(
+            exchange = '',
+            routing_key = queue,
+            body = msg.as_str()
+        )
+        logger.debug( f"sent ping response" )
+
+        ping_ch.close()
+        ping_conn.close()
+    except AMQPConnectionError as e:
+        logger.error(f"Connection error: {e}")
+        exit(1)
+    except AMQPChannelError as e:
+        logger.error(f"Channel error: {e}")
+        exit(1)
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        exit(1)
+
 
 def callback(ch, method, properties, body):
     logger.debug( f"Received: {body}" )
@@ -116,7 +153,7 @@ def callback(ch, method, properties, body):
             logger.debug( f"ping received" )
             if time.time() - float(msg.req_ts()) <= RMQ_TTL:
                 # assume sender is waiting for a response, else ignore
-                send_message( msg.get("response_queue") )
+                send_ping_response( msg.get("response_queue"), msg.get("msgid") )
                 pass
             return True
 

@@ -2,7 +2,6 @@
 """
 Send work to parallel_loader
 
-@todo if parallel_loader is stopped, how to detect so as to not overproduce messages?
 """
 
 import os
@@ -160,13 +159,13 @@ if __name__ == "__main__":
 				durable = False
 			)
 			ping_ch.basic_qos(prefetch_count=1)
-			#ping_ch.basic_consume(queue=resp_q)
 		except pika.exceptions as e:
 			logger.error(f"pika/RabbitMQ connection error: {e}")
 			exit(1)
 
 		"""
 		Send ping request to main queue, message TTL = 30 seconds
+		@todo make queue name more unique to this instance if more than one send running
 		"""
 		msg = cm()
 		msg.ping( resp_q )
@@ -175,17 +174,33 @@ if __name__ == "__main__":
 			  pika.BasicProperties( expiration = str( RMQ_TTL * 1000) )
 		)
 
+		""" will need later to validate """
+		ping_msgid = msg.get("msgid")
+		logger.debug( f"ping msgid: {ping_msgid}" )
+
 		logger.debug( f"waiting for ping ack on {resp_q}" )
 		start_ts = time.time()
 
 		body = None
 		for method, properties, body in ping_ch.consume( queue = resp_q, inactivity_timeout = RMQ_TTL ):
-			if method is None:
-				break
+			logger.debug( f"consume() finished {body}" )
+			logger.debug( f"ack message" )
 			ping_ch.basic_ack( method.delivery_tag )
+
+			if body is None:
+				logger.debug( f"message body is empty" )
+				continue
+
+			""" message ack = one sent """
+			msg = cm( body )
+			if ping_msgid == msg.get("ack"):
+				break
+			
+			""" delayed message resonse, may need to be moved out of loop """
 			if time.time() - start_ts > RMQ_TTL:
 				logger.warning( f"timed out waiting for ping ack" )
 				break
+			logger.debug( f"looping" )
 
 		ping_ch.close()
 		ping_conn.close()

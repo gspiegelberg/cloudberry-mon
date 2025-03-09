@@ -29,6 +29,9 @@ class control_message(Message):
     def ping(self, response_queue):
         return (Message._set(self, "response_queue", response_queue) and Message._set(self, "control", "ping") )
 
+    def ping_ack(self, msgid):
+        return (Message._set(self, "control", "ping") and Message._set(self, "ack", msgid) )
+
     """
     Consumer methods
     """
@@ -43,3 +46,4 @@ class control_message(Message):
             if self.message["control"] == "ping":
                 return True
         return False
+
