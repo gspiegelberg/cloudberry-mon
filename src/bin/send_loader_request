@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
 	override_freq_sql = ""
 	if not OVERRIDE_FREQ:
-		override_freq_sql = " AND extract(epoch from now())::int % frequency = 0"
+		override_freq_sql = " AND public.minute_of_week() % frequency = 0"
 
 	cur = pg.cursor()
 
