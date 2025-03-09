@@ -184,12 +184,13 @@ if __name__ == "__main__":
 		body = None
 		for method, properties, body in ping_ch.consume( queue = resp_q, inactivity_timeout = RMQ_TTL ):
 			logger.debug( f"consume() finished {body}" )
-			logger.debug( f"ack message" )
-			ping_ch.basic_ack( method.delivery_tag )
 
 			if body is None:
 				logger.debug( f"message body is empty" )
-				continue
+				break
+
+			logger.debug( f"ack message" )
+			ping_ch.basic_ack( method.delivery_tag )
 
 			""" message ack = one sent """
 			msg = cm( body )
