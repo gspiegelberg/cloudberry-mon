@@ -220,16 +220,19 @@ metrics to ```cbmon``` database and ultimately grafana or whatever visualization
 Implementing a loader process capable of performing metrics load work in parallel is ncessary
 versus the original systemd loader running serially.
 
-Unlike cbmon_loader.service, parallel_loader is not configured to a specific cluster
-therefore able to service requests for any.
+Unlike systemd method, ```parallel_loader``` is not configured to a specific cluster
+therefore services requests for any cluster.
 
 1. Install RabbitMQ & configure adding users, vhost and queues
+
 2. Install python3 pika module
 ```
 sudo pip3 install pika
 ```
 3. Configure ```etc/config.ini``` for RabbitMQ instance
+
 4. Install ```parallel_loader.service``` in ```/etc/systemd/system```
+
 5. Reload systemd, start and enable new service
 ```
 sudo systemctl daemon-reload
@@ -237,7 +240,7 @@ sudo systemctl start parallel_loader.service
 sudo systemctl enable parallel_loader.service
 ```
 
-6. Create cron jobs for each cluster
+6. Create cron jobs for each cluster sending load messages for all enabled metric types
 ```
 * * * * * PYTHONPATH=/usr/local/cbmon/bin/pylib /usr/local/cbmon/bin/send_loader_request --config /usr/local/cbmon/etc/config.ini -C <<CLUSTER_ID>> --load-all
 ```

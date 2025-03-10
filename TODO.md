@@ -4,7 +4,7 @@ Known issues:
  * Certain jobs take longer than others to load. Specifically, "cpu" load function
    can easily make the once/minute data gathering skew to once/10 minutes. Intention
    is to replace loader->CALL load() with loader->AMQP->RabbitMQ->consumer->load
-   single metric type.
+   single metric type. See parallel_loader branch.
 
  * Test RHEL 9 variants 
    * Adjust install instructions where needed
@@ -14,17 +14,20 @@ Known issues:
 To Do's
 ========================================================================
 
- * Build RPM or easier delivery
+* Build RPM or easier delivery
 
- * Implement rules to effect change on remote cluster such as "terminate
+* Implement rules to effect change on remote cluster such as "terminate
    idle in transaction" sessions over X minutes
 
- * Implement ability to view query EXPLAIN
+* Implement ability to view query EXPLAIN
 
- * Create a cbmon extension running in segment bgworker to capture live query execution
+* Create a cbmon extension running in segment bgworker to capture live query execution
    statistics and dashboard viz to show live per slice resource consumption, relations
    used and historical query information
 
- * cbmon/etc/config overloaded & used by both Cloudberry & PostgreSQL side
+* Intermediate query statistics plan, create job to gather query execution data from
+  segment logs. See query_stats branch.
+
+* cbmon/etc/config overloaded & used by both Cloudberry & PostgreSQL side
    Separate into different files
 
