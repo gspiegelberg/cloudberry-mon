@@ -31,3 +31,13 @@ To Do's
 * cbmon/etc/config overloaded & used by both Cloudberry & PostgreSQL side
    Separate into different files
 
+Parallel Loader specific to do's:
+========================================================================
+* Pull duplicate portions of code out of parallel_loader, send_loader_request and stop_loader
+  placing in common classes for ease of maintenance
+* Permit configuration file environment variable for easier cli execution
+* Move public.load_functions.enabled into a cluster-load_function relationship table
+  permitting per cluster enabling/disabling of load_functions
+* Move gen_functions into load_functions. Shouldn't be a problem and will rid the need
+  for public.gen_functions
+* Smoother exit from parallel_loader with option to wait for any executing workers to finish

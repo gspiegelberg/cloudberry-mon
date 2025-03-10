@@ -7,6 +7,7 @@ User=cbmon
 Group=cbmon
 Type=simple
 
+Environment="PYTHONPATH=/usr/local/cbmon/bin/pylib"
 ExecStart=/usr/local/cbmon/bin/parallel_loader --config /usr/local/cbmon/etc/config.ini
 Restart=always
 RestartSec=30
