@@ -245,7 +245,18 @@ sudo systemctl enable parallel_loader.service
 * * * * * PYTHONPATH=/usr/local/cbmon/bin/pylib /usr/local/cbmon/bin/send_loader_request --config /usr/local/cbmon/etc/config.ini -C <<CLUSTER_ID>> --load-all
 ```
 
+#### Recommendations:
 
+File ```etc/config.ini cbmon_load.max_workers``` should not exceed the number of connections wanted
+in Cloudberry database. Also keep in mind if Grafana or whatever dashboard & alerting implemented
+querying PostgreSQL cbmon database will also consume connections.
+
+To alleviate connection consumption, recommend creating a pgbouncer instance or creating a pool
+in an existing pgbouncer. Once set up, ```ALTER SERVER``` setting host, port and any other relevant
+options to use pgbouncer.
+
+When using any connection pooler, important for pool size to be equal to ```cbmon_load.max_workers```
+plus adequate spares for dashboard and alerting.
 
 Enabling summaries process
 ========================================================================
