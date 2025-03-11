@@ -69,8 +69,8 @@ sudo systemctl edit sysstat-collect.timer
 
    Paste:
 ```
-   [Timer]
-   OnCalendar=*:00/1
+[Timer]
+OnCalendar=*:00/1
 ```
  
 3. Creates ```/etc/systemd/system/sysstat-collect.timer.d/override.conf```   2. Reloads systemctl daemon-reload
@@ -92,13 +92,13 @@ gpssh -f allhosts sudo systemctl enable sysstat-collect.timer
 ```
    NOTE for RHEL 9 variants:
 ```
-   gpssh -f allhosts sudo systemctl start sysstat
-   gpssh -f allhosts sudo systemctl enable sysstat
+gpssh -f allhosts sudo systemctl start sysstat
+gpssh -f allhosts sudo systemctl enable sysstat
 ```
    RHEL 8/9 verify: Files should grow once/minute in ```/var/log/sa```
 ```
-   ls -l /var/log/sa
-   sar -f /var/log/sa/saDD -b
+ls -l /var/log/sa
+sar -f /var/log/sa/saDD -b
 ```
 4. Copy tar to all hosts
 ```
@@ -111,8 +111,9 @@ gpssh -f allhosts sudo tar xpfz /tmp/cbmon.tar.gz -C /usr/local
 ```
 
 6. Change ownership
-
-   gpssh -f allhosts sudo chown -R gpadmin:gpadmin /usr/local/cbmon
+```
+gpssh -f allhosts sudo chown -R gpadmin:gpadmin /usr/local/cbmon
+```
 
 
 Cloudberry Configuration:
@@ -194,7 +195,7 @@ Option 1 - Enabling systemd loader process
 
 2. Install service file replacing <<CLUSTER_ID>> with cluster ID
 ```
-   sudo install -o root -g root -m 0644 \
+sudo install -o root -g root -m 0644 \
      /usr/local/cbmon/etc/cbmon_loader.service \
      /etc/systemd/system/cbmon_loader-c<<CLUSTER_ID>>.service
 ```
@@ -265,7 +266,7 @@ Enabling summaries process
 
 2. Install service file replacing <<CLUSTER_ID>> with cluster ID
 ```
-   sudo install -o root -g root -m 0644 \
+sudo install -o root -g root -m 0644 \
      /usr/local/cbmon/etc/cbmon_summaries.service \
      /etc/systemd/system/cbmon_summaries-c<<CLUSTER_ID>>.service
 ```
