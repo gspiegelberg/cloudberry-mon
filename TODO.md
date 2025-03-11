@@ -41,3 +41,4 @@ Parallel Loader specific to do's:
 * Move gen_functions into load_functions. Shouldn't be a problem and will rid the need
   for public.gen_functions
 * Smoother exit from parallel_loader with option to wait for any executing workers to finish
+* Move load_shell_functions to load_functions (requires testing)
