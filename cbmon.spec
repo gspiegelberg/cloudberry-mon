@@ -9,7 +9,7 @@ Summary: Cloudberry monitoring
 Name: cbmon
 Version: 1.0.0
 Release: 1
-License: GPL+
+License: Apache License Version 2.0
 Group: Development/Tools
 SOURCE0 : %{name}-%{version}.tar.gz
 URL: http://company.com/
