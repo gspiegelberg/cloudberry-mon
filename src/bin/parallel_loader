@@ -94,7 +94,8 @@ def send_ping_response(queue, msgid):
         ping_conn = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=RMQ_HOST,
-                credentials=creds
+                credentials=creds,
+                virtual_host = RMQ_VHOST
             )
         )
 
@@ -217,7 +218,8 @@ def main():
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host = RMQ_HOST,
-                    credentials = creds
+                    credentials = creds,
+                    virtual_host = RMQ_VHOST
                 )
             )
 
@@ -287,6 +289,7 @@ if __name__ == "__main__":
     RMQ_USER = config.get('rabbitmq', 'user')
     RMQ_PASS = config.get('rabbitmq', 'pass')
     RMQ_TTL  = int(config.get('rabbitmq', 'ttl'))
+    RMQ_VHOST = config.get('rabbitmq', 'virtual_host')
 
     LOG_DIR = config.get('logging', 'dir')
     LOG_LEVEL = config.get('logging', 'level')
