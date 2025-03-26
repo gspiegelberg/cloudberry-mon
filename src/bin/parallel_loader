@@ -305,7 +305,7 @@ if __name__ == "__main__":
     file_handler = TimedRotatingFileHandler(
         LOG_FILE, when="midnight", interval=1, backupCount=7
     )
-    formatter = logging.Formatter('%(asctime)s:' + py_name + ':%(funcName)s():%(levelname)s:%(message)s')
+    formatter = logging.Formatter('%(asctime)s,' + py_name + ',%(funcName)s(),%(levelname)s,%(message)s', "%Y-%m-%d %H:%M:%S")
     file_handler.setFormatter(formatter)
 
     # Where logs are going, file & console
