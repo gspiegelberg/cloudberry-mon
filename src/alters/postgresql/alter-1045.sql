@@ -40,16 +40,16 @@ CREATE TABLE templates.query_historical_statistics(
 	subxact     integer,
 	severity    varchar(10),
 	state       varchar(10),
-	elapsed_t   integer,
-	tot_sys_t   integer,
-	tot_user_t  integer,
-	maxrss_kb   integer,
-	inblock     integer,
-	outblock    integer,
-	majflt      integer,
-	minflt      integer,
-	nvcsw       integer,
-	nivcsw      integer
+	elapsed_t   bigint,
+	tot_sys_t   bigint,
+	tot_user_t  bigint,
+	maxrss_kb   bigint,
+	inblock     bigint,
+	outblock    bigint,
+	majflt      bigint,
+	minflt      bigint,
+	nvcsw       bigint,
+	nivcsw      bigint
 );
 
 CREATE INDEX ON templates.query_historical_statistics(hostname, period);
