@@ -1,26 +1,32 @@
-Database Metric Gathering & Health Dashboard Backend
+Cloudberry Monitor
 
 About:
 ========================================================================
 
-CBmon is a set of scripts & schema to permit observability of one or many
-CloudberryDB clusters in the abscence of Greenplum Command Center (GPCC). Very
-likely can also monitor Greenplum (Broadcom) however equally likely to be
-compatibility issues as one is now closed source.
+Cloudberry Monitor is a set of scripts & schema to permit observability
+of one or many Apache Cloudberry (incubating) clusters in the abscence
+of Greenplum Command Center (GPCC). Very likely can also monitor
+Greenplum (Broadcom) however equally likely to be compatibility issues
+as one is now closed source.
 
-Benefits, unlike GPCC, are that this system will catch up even when the database
-is down. It leverages sar logs specifically those created by sysstat 11.7 found
-in RHEL 8 and variants. As long as those files are being written to host metrics
-will eventually appear.
+Benefits, unlike GPCC, are that this system will catch up even when the
+database is down. It leverages sar logs specifically those created by
+sysstat 11.7 found in RHEL 8 and variants. As long as those files are
+being written to host metrics will eventually appear.
 
-Why not Prometheus? It's a fine product designed to do many things. Desire was
-ease of extensibility without having to learn other tech's or languages,
-maintainable, & live data direct from Cloudberry cluster. Tradeoffs.
+Included is a sample Grafana dashboard. Grafana is not necessary however
+due to ease of installation, configuration, flexibility and alerting it
+is recommended.
+
+Why not Prometheus? It's a fine product designed to do many things.
+Desire was ease of extensibility without having to learn other tech's
+or languages, maintainable, & live data direct from Cloudberry cluster.
+Tradeoffs.
 
 Working Configurations:
 ========================================================================
  * RHEL 8 hosts
- * pre-Apache Cloudberry 1.6.0 & Apache Cloudberry main branch
+ * pre-Apache Cloudberry 1.6.0 & Apache Cloudberry (incubating) main branch
  * RHEL 8 based CBmon PostgreSQL
 
 Untested & needs work:
@@ -226,9 +232,9 @@ therefore services requests for any cluster.
 
 1. Install RabbitMQ & configure adding users, vhost and queues
 
-2. Install python3 pika module
+2. Install python3 modules
 ```
-sudo pip3 install pika
+sudo pip3 install pika psycopg2
 ```
 3. Configure ```etc/config.ini``` for RabbitMQ instance
 
