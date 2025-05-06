@@ -87,6 +87,7 @@ if __name__ == "__main__":
 	RMQ_USER = config.get('rabbitmq', 'user')
 	RMQ_PASS = config.get('rabbitmq', 'pass')
 	RMQ_TTL  = int(config.get('rabbitmq', 'ttl'))
+	RMQ_VHOST  = config.get('rabbitmq', 'virtual_host')
 	JOB_QUEUE = config.get('cbmon_load', 'job_queue')
 	ROUTING_KEY = JOB_QUEUE
 
@@ -97,7 +98,8 @@ if __name__ == "__main__":
 		connection = pika.BlockingConnection(
 			pika.ConnectionParameters(
 				host=RMQ_HOST,
-				credentials=creds
+				credentials=creds,
+				virtual_host = RMQ_VHOST
 			)
 		)
 		channel = connection.channel()
@@ -146,7 +148,8 @@ if __name__ == "__main__":
 			ping_conn = pika.BlockingConnection(
 				pika.ConnectionParameters(
 					host=RMQ_HOST,
-					credentials=creds
+					credentials=creds,
+					virtual_host = RMQ_VHOST
 				)
 			)
 			ping_ch = ping_conn.channel()
