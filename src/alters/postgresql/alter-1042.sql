@@ -60,12 +60,13 @@ SELECT ch.cluster_id
      , s.volserial
   FROM public.cluster_hosts ch
        JOIN %s.cat_gp_segment_configuration gsc
-         ON (ch.hostname = gsc.hostname OR ch.altname = gsc.hostname)
+         ON (gsc.hostname IN (ch.hostname, ch.altname, ch.display_name))
        JOIN %s._storage s
-         ON (ch.hostname = s.hostname OR ch.altname = s.hostname)
+         ON (s.hostname IN (ch.hostname, ch.altname, ch.display_name))
  WHERE s.mntpt = ''/''||split_part(gsc.datadir, ''/'', 2)
+   AND ch.cluster_id = %s
 WITH DATA'
-			, cmetrics, cmetrics, cmetrics
+			, cmetrics, cmetrics, cmetrics, cluster_id
 		);
 
 	ELSE
