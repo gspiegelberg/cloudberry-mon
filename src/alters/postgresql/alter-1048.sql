@@ -1,6 +1,3 @@
-/**
- * Adjustments to alter-1045
- */
 BEGIN;
 
 INSERT INTO public.alters (id,summary) VALUES
