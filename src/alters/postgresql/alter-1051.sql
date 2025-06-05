@@ -40,13 +40,14 @@ DECLARE
 	cserver  text;
 	cmetrics text;
 	logtbl   text;
+	alter_applied boolean;
 BEGIN
 	FOR cserver, cmetrics, logtbl IN
 		SELECT public.cluster_server(c.id), public.cluster_metrics_schema(c.id), v.logtbl
-		FROM public.clusters c, (VALUES (
-	'cbmon.__paging_segments_today', 'cbmon.__paging_master_today', 'cbmon._raw_paging_today',
-	'cbmon.__paging_segments_yesterday', 'cbmon.__paging_master_yesterday', 'cbmon._raw_paging_yesterday',
-	'cbmon.__paging_segments_all', 'cbmon.__paging_master_all', 'cbmon._raw_paging_all') ) AS v(logtbl)
+		FROM public.clusters c, (VALUES 
+	('cbmon.__paging_segments_today'), ('cbmon.__paging_master_today'), ('cbmon._raw_paging_today'),
+	('cbmon.__paging_segments_yesterday'), ('cbmon.__paging_master_yesterday'), ('cbmon._raw_paging_yesterday'),
+	('cbmon.__paging_segments_all'), ('cbmon.__paging_master_all'), ('cbmon._raw_paging_all') ) AS v(logtbl)
 	LOOP
 		EXECUTE format('SELECT id = 1018 FROM %s.alters WHERE id = 1018', cmetrics) INTO alter_applied;
 		IF NOT alter_applied THEN

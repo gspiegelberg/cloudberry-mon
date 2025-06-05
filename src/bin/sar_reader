@@ -57,7 +57,7 @@ do
 
 	that_day=$( head -1 $tmpfile | sed -n 's/.*\(20[0-9][0-9]-[01][0-9]-[0-3][0-9]\).*/\1/p' )
 
-	egrep -v "^$|^Linux|^Average|^$|RESTART|CPU|DEV|blocked|kbswpfree|kbmemfree|kbswpfree|IFACE|totsck|total.s" $tmpfile | \
+	egrep -v "^$|^Linux|^Average|^$|RESTART|CPU|DEV|blocked|kbswpfree|kbmemfree|kbswpfree|IFACE|totsck|total.s|proc.s|pgpgout" $tmpfile | \
 		sed -e 's/ \{1,\}/,/g' -e 's/^/'"$that_day"' /g' -e 's/^/'${hn}',/g'
 
 	# en_UK.utf8 - 24-hr format
