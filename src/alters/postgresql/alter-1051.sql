@@ -48,6 +48,7 @@ BEGIN
 	('cbmon.__paging_segments_today'), ('cbmon.__paging_master_today'), ('cbmon._raw_paging_today'),
 	('cbmon.__paging_segments_yesterday'), ('cbmon.__paging_master_yesterday'), ('cbmon._raw_paging_yesterday'),
 	('cbmon.__paging_segments_all'), ('cbmon.__paging_master_all'), ('cbmon._raw_paging_all') ) AS v(logtbl)
+		 WHERE c.enabled
 	LOOP
 		EXECUTE format('SELECT id = 1018 FROM %s.alters WHERE id = 1018', cmetrics) INTO alter_applied;
 		IF NOT alter_applied THEN
