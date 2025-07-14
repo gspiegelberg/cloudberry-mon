@@ -1,3 +1,8 @@
+# On mdw host only, uncomment and set if installed in a non-standard location
+#PATHFILE=/opt/greenplum-db/greenplum_path.sh
+# Leave if this file is on the cbmon PostgreSQL database host
+PATHFILE="pg"
+
 # cbmon database
 PGPORT=5432
 PGDATABASE=cbmon
@@ -27,3 +32,33 @@ SUMLOGFILE=/usr/local/cbmon/logs/summaries.log
 
 # Rotate if larger than 1MB
 LOGMAXSIZE=1024000
+
+
+# Permit supporting Cloudberry, Greenplum and EBD Warehouse PG
+if [ "$PATHFILE" = "pg" ]; then
+	# do nothing
+	/bin/true
+else
+	if [ -z "$PATHFILE" ]; then
+		if [ -f /usr/local/cloudberry-db/greenplum_path.sh ]; then
+			# Cloudberry v1 support
+			PATHFILE=/usr/local/cloudberry-db/greenplum_path.sh
+		elif [ -f /usr/local/cloudberry-db/cloudberry_path.sh ]; then
+			# Cloudberry v2 support
+			PATHFILE=/usr/local/cloudberry-db/cloudberry_path.sh
+		elif [ -f /usr/local/greenplum-db/greenplum_path.sh ]; then
+			# Greenplum & EDB Warehouse PG support
+			PATHFILE=/usr/local/greenplum-db/greenplum_path.sh
+		else
+			printf "unable to find path file" >&2
+			exit 1
+		fi
+	fi
+
+	if [ ! -f "$PATHFILE" ]; then
+		printf "unable to find path file" >&2
+		exit 1
+	fi
+	source "${PATHFILE}"
+fi
+

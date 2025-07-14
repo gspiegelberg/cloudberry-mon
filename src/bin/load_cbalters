@@ -1,15 +1,13 @@
 #!/bin/sh
 
-. /usr/local/cbmon/etc/config
 . /usr/local/cbmon/bin/logging
-. /usr/local/cloudberry-db/greenplum_path.sh
 
 options="hc:d:U:p:"
 
 DB_NAME=""
 DB_USER=""
 DB_PORT=""
-CBPATH="/usr/local/cloudberry-db/greenplum_path.sh"
+PATHFILE=""
 
 options="hd:U:p:"
 
@@ -17,8 +15,8 @@ usage() {
 	rval="${1:-0}"
 	cat << EOL
 usage: load_cbalters ...
- -c path    path to nonstandard location of greenplum_path.sh
-            default $CBPATH
+ -c path    path to nonstandard location of greenplum_path.sh or cloudberry_path.sh
+            default $PATHFILE
  -h         help
  -d DBNAME  database name (REQUIRED)
  -p DBPORT  database port (REQUIRED)
@@ -31,7 +29,7 @@ while getopts $options opt
 do
 	case "$opt" in
 	c)
-		CBPATH="${OPTARG}"
+		PATHFILE="${OPTARG}"
 		;;
 	d)
 		DB_NAME="${OPTARG}"
@@ -53,9 +51,8 @@ done
 [ -z "${DB_NAME}" ] && printf "database name required\n" && exit 1
 [ -z "${DB_USER}" ] && printf "database user with superuser required\n" && exit 1
 [ -z "${DB_PORT}" ] && printf "database port required\n" && exit 1
-[ ! -f "${CBPATH}" ] && printf "greenplum_path not found\n" && exit 1
 
-source "${CBPATH}"
+. /usr/local/cbmon/etc/config
 
 PSQL="psql -qAt -d ${DB_NAME} -p ${DB_PORT} -U ${DB_USER}"
 

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . /usr/local/cbmon/etc/config
-. /usr/local/cloudberry-db/greenplum_path.sh
 
 options="H:"
 

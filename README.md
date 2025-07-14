@@ -124,12 +124,11 @@ gpssh -f allhosts sudo chown -R gpadmin:gpadmin /usr/local/cbmon
 
 Cloudberry Configuration:
 ========================================================================
-1. Change to alters directory
-```
-cd /usr/local/cbmon/alters/cloudberry
-```
+On the mdw host only, perform the following steps:
 
-2. Load each in numeric order
+1. Set MASTER_DATA_DIRECTORY in /usr/local/cbmon/etc/config
+
+2. Load each alter in numerical order
 ```
 /usr/local/cbmon/bin/load_cbalters -d MYDB -p PORT -U gpadmin
 ```
@@ -172,10 +171,10 @@ dnf -y install postgresql16 postgresql16-contrib postgresql16-server grafana pg_
     
 8. Configure ```postgresql.conf``` per alter output permitting ```pg_partman``` usage
 ```
-    shared_preload_libraries = 'pg_partman_bgw'
-    pg_partman_bgw.interval = 3600'
-    pg_partman_bgw.role = 'partman'
-    pg_partman_bgw.dbname = 'cbmon'
+shared_preload_libraries = 'pg_partman_bgw'
+pg_partman_bgw.interval = 3600'
+pg_partman_bgw.role = 'partman'
+pg_partman_bgw.dbname = 'cbmon'
 ```
 7. Configure pg_hba.conf to permit grafana & cbmon user access & restart
 ```
@@ -193,9 +192,53 @@ systemctl enable postgresql-16
 systemctl enable grafana
 ```
 
-
-Option 1 - Enabling systemd loader process
+Creating clusters
 ========================================================================
+Tenancy in cbmon PostgreSQL database is done via schemas where a cluster
+schema is named ```metrics_CLUSTER_ID``` where CLUSTER_ID is from
+```public.clusters```.
+
+To create a cluster, perform the following in the cbmon database:
+
+```
+SELECT public.create_cluster(
+        v_name        varchar(256),  -- Cluster name
+        v_mdwname     varchar(256),  -- Cluster mdw hostname
+        v_mdwip       varchar(16),   -- Cluster mdw IP
+        v_port        int,           -- Cluster mdw port
+        v_cbmondb     varchar(256),  -- Database where cbmon schema has been loaded
+        v_cbmonschema varchar(256),  -- Name of schema in database, typically cbmon
+        v_user        varchar(256),  -- Superuser to connect as
+        v_pass        varchar(256)   -- Superuser password
+);
+```
+
+This function will create and populate ```metrics``` schema as well as
+several other tables.
+
+IMPORTANT: Review ```public.cluster_hosts```. Values in ```hostname``` column
+must match each host actual hostname, that is output of ```hostname``` command.
+For display purposes, populate ```public.cluster_hosts.display_name``` with
+preferred name such as ```sdw1```, ```sdw2```, and so on.
+
+When changes are made to ```public.cluster_hosts```, the clusters corresponding
+```metrics_X.data_storage_summary_mv``` materialized view must be refreshed.
+```
+REFRESH MATERIALIZED VIEW metrics_X.data_storage_summary_mv WITH DATA;
+```
+
+Equally important, cluster ```metrics_X``` schema will not yet contain
+tables with historical data. This will occur once loader process has
+initially run.
+
+
+Option 1 - Enabling old systemd loader process
+========================================================================
+Initially, all loading was done via a loader script. Early on it was noticed
+this script would fall behind due to its serial execution nature and certain
+load functions taking a long time. It is kept here simply to document as an
+option. The parallel loader process below is recommended as this will no
+longer be maintained.
 
 1. Edit ```etc/config``` and ```cbmon_loader.service``` to reflect cluster ID
 
@@ -262,11 +305,15 @@ To alleviate connection consumption, recommend creating a pgbouncer instance or 
 in an existing pgbouncer. Once set up, ```ALTER SERVER``` setting host, port and any other relevant
 options to use pgbouncer.
 
-When using any connection pooler, important for pool size to be equal to ```cbmon_load.max_workers```
-plus adequate spares for dashboard and alerting.
+When using any connection pooler, important for pool size to be equal to ```config.ini```
+``cbmon_load.max_workers``` plus adequate spares for dashboard and alerting.
+
 
 Enabling summaries process
 ========================================================================
+Summaries service execute functions responsible for generating periodic
+summarization of gathered performance metrics. It is useful for faster
+dashboard loads and permitting drill-down capabilities.
 
 1. Edit ```etc/config``` and ```cbmon_summaries.service``` to reflect cluster ID
 

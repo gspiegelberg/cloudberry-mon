@@ -1,12 +1,49 @@
 #!/bin/bash
 
+usage() {
+	cat << EOHELP
+build_rpm.sh -r R -v V -d D
+  -r R      release number (required)
+  -v V      version number (required)
+  -d D      d = { el8 | el9 } (required)
+  -h        help
+EOHELP
+	exit
+}
+
+options="r:v:d:h"
+
+while getopts $options opt
+do
+	case "$opt" in
+	d)
+		DIST="${OPTARG}"
+		SPECFILE=cbmon-${DIST}.spec
+		;;
+	r)
+		RELEASE="${OPTARG}"
+		;;
+	v)
+		VERSION="${OPTARG}"
+		;;
+	*)
+		usage
+		;;
+	esac
+done
+
+if [ ! -f "$SPECFILE" ]; then
+	echo "spec file $SPECFILE does not exist"
+	usage
+fi
+
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR="$CWDIR"
 
-VERSION=0.9
-RELEASE=1
+#VERSION=0.9
+#RELEASE=1
 ARCH=noarch
-TARBALL="cbmon-${VERSION}-${RELEASE}.el8.noarch.tar.gz"
+TARBALL="cbmon-${VERSION}-${RELEASE}.${DIST}.noarch.tar.gz"
 
 # Reset & prep
 BUILDROOT="/tmp/package-build"
@@ -31,11 +68,11 @@ rm -rf ${SRCBASE}
 
 cp -f ${DIR}/${TARBALL} ${BUILDROOT}/SOURCES/
 
-cp -f ${DIR}/cbmon.spec ${BUILDROOT}/SPECS/
+cp -f ${DIR}/${SPECFILE} ${BUILDROOT}/SPECS/
 
-rpmbuild -bb ${BUILDROOT}/SPECS/cbmon.spec --define "%_topdir ${BUILDROOT}"
-
-#  --define "debug_package %{nil}"
+rpmbuild -bb ${BUILDROOT}/SPECS/${SPECFILE} --define "%_topdir ${BUILDROOT}" \
+  --define "_version ${VERSION}" \
+  --define "_release ${RELEASE}"
 
 cp -f ${BUILDROOT}/RPMS/noarch/*.rpm ${CWDIR}
 
