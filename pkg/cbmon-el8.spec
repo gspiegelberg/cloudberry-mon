@@ -23,7 +23,7 @@ clusters.
 # No build steps needed for pure Python scripts
 
 %install
-[ -f /usr/local/cloudberry-db/greenplum_path.sh -o -f /usr/local/greenplum-db/greenplum_path.sh -o -f /usr/local/cloudberry-db/cloudberry_path.sh -o /usr/local/cloudberry-db/cloudberry-env.sh ] || (echo 'cannot find path script'; exit 1)
+[ -f "$PATHFILE" -o -f /usr/local/cloudberry-db/greenplum_path.sh -o -f /usr/local/greenplum-db/greenplum_path.sh -o -f /usr/local/cloudberry-db/cloudberry_path.sh -o -f /usr/local/cloudberry-db/cloudberry-env.sh ] || (echo 'cannot find path script'; exit 1)
 python3 -c "import sys; assert sys.version_info >= (3, 6), 'Python 3.6+ is required'"
 #python3 -c "import configparser" || (echo 'Missing python3 module configparser'; exit 1)
 #python3 -c "import logging" || (echo 'Missing python3 module logging'; exit 1)
