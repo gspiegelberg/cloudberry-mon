@@ -10,9 +10,9 @@ BEGIN;
 INSERT INTO cbmon.alters (id, summary) VALUES
 ( 1015, 'add disk device serial');
 
-DROP MATERIALIZED VIEW cbmon._storage;
-DROP EXTERNAL TABLE cbmon.__storage_segments;
-DROP EXTERNAL TABLE cbmon.__storage_master;
+DROP MATERIALIZED VIEW IF EXISTS cbmon._storage;
+DROP EXTERNAL TABLE IF EXISTS cbmon.__storage_segments;
+DROP EXTERNAL TABLE IF EXISTS cbmon.__storage_master;
 
 /**
  * To map dev<major>:<minor> to device & mount point
