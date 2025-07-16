@@ -10,6 +10,15 @@ import socket
 hostname = socket.gethostname()
 current_time = time.time()
 
+# Frequently used patterns
+re_is_pg = re.compile(r'^postgres: ')
+re_client_ip = re.compile(r'\((\d+)\)')
+re_session_id = re.compile(r' con(\d+) ')
+re_cmdno = re.compile(r' cmd(\d+) ')
+re_content = re.compile(r' seg(\d+) ')
+re_slice = re.compile(r' slice(\d+) ')
+
+
 def is_mdw():
     found_mdw = False
     mdw_pid = -1
@@ -25,9 +34,9 @@ def is_mdw():
                 return False
     return found_mdw
 
-
 def is_backend(cmdline):
-    match = re.search(r'^postgres: ', cmdline)
+    #match = re.search(r'^postgres: ', cmdline)
+    match = re_is_pg.search(cmdline)
     if not match:
         return False
 
@@ -44,23 +53,27 @@ def is_backend(cmdline):
         res['client_port'] = -1
     else:
         res['client_ip'] = re.sub(r"\(\d+\)", r"", parts[5])
-        match = re.search(r'\((\d+)\)', parts[5])
+        #match = re.search(r'\((\d+)\)', parts[5])
+        match = re_client_ip.search(parts[5])
         if match:
             res['client_port'] = match.group(1)
 
-    match = re.search(r' con(\d+) ', cmdline)
+    #match = re.search(r' con(\d+) ', cmdline)
+    match = re_session_id.search(cmdline)
     if match:
         res['session_id'] = match.group(1)
     else:
         res['session_id'] = "-404"
 
-    match = re.search(r' cmd(\d+) ', cmdline)
+    #match = re.search(r' cmd(\d+) ', cmdline)
+    match = re_cmdno.search(cmdline)
     if match:
         res['cmdno'] = match.group(1)
     else:
         res['cmdno'] = "-404"
 
-    match = re.search(r' seg(\d+) ', cmdline)
+    #match = re.search(r' seg(\d+) ', cmdline)
+    match = re_content.search(cmdline)
     if match:
         res['content'] = match.group(1)
     else:
@@ -76,7 +89,8 @@ def is_backend(cmdline):
         else:
             res['sqlcmd'] = parts[ len(parts) - 1 ]
     else:
-        match = re.search(r' slice(\d+) ', cmdline)
+        #match = re.search(r' slice(\d+) ', cmdline)
+        match = re_slice.search(cmdline)
         if match:
             res['slice'] = match.group(1)
         else:
@@ -127,8 +141,13 @@ is_mdw_host = is_mdw()
 
 
 
+'''
+# Full list
+for proc in psutil.process_iter(['cmdline', 'cpu_affinity', 'cpu_num', 'cpu_percent', 'cpu_times', 'create_time', 'cwd', 'environ', 'exe', 'gids', 'io_counters', 'ionice', 'memory_full_info', 'memory_info', 'memory_maps', 'memory_percent', 'name', 'nice', 'num_ctx_switches', 'num_fds', 'num_threads', 'open_files', 'pid', 'ppid', 'status', 'terminal', 'threads', 'uids', 'username']):
+'''
 for proc in psutil.process_iter(['cmdline', 'cpu_percent', 'cpu_times', 'create_time', 'io_counters', 'memory_full_info', 'memory_percent', 'name', 'num_ctx_switches', 'pid', 'status', 'username']):
     if proc.info['username'] == "gpadmin":
+        #and proc.info['terminal'] is None:
         if len(proc.info['cmdline']) == 0:
             continue
 
@@ -146,9 +165,7 @@ for proc in psutil.process_iter(['cmdline', 'cpu_percent', 'cpu_times', 'create_
         results['create_ts'] = proc.info['create_time']
 
         # disk i/o
-        '''
-        io_counters sometimes not set
-        '''
+        #if 'io_counters' in proc.info:
         try:
             results['read_count'] = proc.info['io_counters'].read_count
             results['read_bytes'] = proc.info['io_counters'].read_bytes
@@ -178,4 +195,4 @@ for proc in psutil.process_iter(['cmdline', 'cpu_percent', 'cpu_times', 'create_
         results['ctxsw_invol'] = proc.info['num_ctx_switches'].involuntary
 
         print( json.dumps(results) )
-
+        #exit(0)
