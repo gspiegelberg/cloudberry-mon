@@ -66,7 +66,7 @@ SELECT ch.cluster_id
  WHERE s.mntpt = ''/''||split_part(gsc.datadir, ''/'', 2)
    AND ch.cluster_id = %s
 WITH DATA'
-			, cmetrics, cmetrics, cmetrics, cluster_id
+			, cmetrics, cmetrics, cmetrics, v_cluster_id
 		);
 
 	ELSE
