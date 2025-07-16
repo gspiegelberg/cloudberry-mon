@@ -121,7 +121,6 @@ BEGIN
 		RAISE DEBUG 'cluster.id %, starting func %', v_cluster_id, func;
 
 		PERFORM * FROM public.check_metric_table( v_cluster_id, tbl );
-		COMMIT;
 
 		sql := format('SELECT * FROM %s(%s, %s::boolean)', func, v_cluster_id, quote_literal(v_prime));
 
