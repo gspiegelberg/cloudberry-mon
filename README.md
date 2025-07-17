@@ -153,9 +153,19 @@ sudo tar xpfz /tmp/cbmon.tar.gz -C /usr/local
 sudo chown -R postgres:postgres /usr/local/cbmon
 ```
 
-3. Install PostgreSQL 16, pg_partman and grafana packages. No conceivable reason a version of PostgreSQL >=16 would not work.
+3. Install prerequisites for PostgreSQL, pg_partman and grafana packages. No conceivable reason a version of PostgreSQL >=16 would not work.
+Prerequsites:
 ```
-dnf -y install postgresql16 postgresql16-contrib postgresql16-server grafana pg_partman_16
+rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf install perl libxslt libicu-devel clang-devel llvm-devel
+dnf install python3-psycopg2
+dnf --disablerepo=* --enablerepo=powertools install perl-IPC-Run
+dnf -y update
+```
+
+```
+sudo rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf --nogpgcheck --disablerepo=* --enablerepo=pgdg16 -y install postgresql16 postgresql16-contrib postgresql16-server grafana pg_partman_16
 ```
 
 4. Initialize PostgreSQL
@@ -172,9 +182,10 @@ dnf -y install postgresql16 postgresql16-contrib postgresql16-server grafana pg_
 8. Configure ```postgresql.conf``` per alter output permitting ```pg_partman``` usage
 ```
 shared_preload_libraries = 'pg_partman_bgw'
-pg_partman_bgw.interval = 3600'
+pg_partman_bgw.interval = '3600'
 pg_partman_bgw.role = 'partman'
 pg_partman_bgw.dbname = 'cbmon'
+pg_partman_bgw.analyze = 'on'
 ```
 7. Configure pg_hba.conf to permit grafana & cbmon user access & restart
 ```
@@ -183,13 +194,13 @@ systemctl restart postgresql-16
 
 8. Configure grafana for your environment & start
 ```
-systemctl start grafana
+systemctl start grafana-server
 ```
 
 9. Enable PostgreSQL & grafana to start on reboot
 ```
 systemctl enable postgresql-16
-systemctl enable grafana
+systemctl enable grafana-server
 ```
 
 Creating clusters
@@ -273,7 +284,33 @@ versus the original systemd loader running serially.
 Unlike systemd method, ```parallel_loader``` is not configured to a specific cluster
 therefore services requests for any cluster.
 
-1. Install RabbitMQ & configure adding users, vhost and queues
+1. Install RabbitMQ & configure adding users, vhost and queues. Example:
+```
+sudo -s
+
+dnf install epel-release curl -y
+
+curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash
+curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | bash
+
+dnf -y install erlang rabbitmq-server
+
+systemctl start rabbitmq-server
+systemctl enable rabbitmq-server
+
+rabbitmqctl add_user admin
+rabbitmqctl set_user_tags admin administrator
+rabbitmqctl list_users
+
+# Enable web console
+rabbitmq-plugins enable rabbitmq_management
+systemctl restart rabbitmq-server
+rabbitmqctl status
+
+rabbitmqctl add_user cbmon
+rabbitmqctl add_vhost /cbmon_ploader
+rabbitmqctl set_permissions -p /cbmon_ploader cbmon ".*" ".*" ".*"
+```
 
 2. Install python3 modules
 ```
@@ -282,6 +319,9 @@ sudo pip3 install pika psycopg2
 3. Configure ```etc/config.ini``` for RabbitMQ instance
 
 4. Install ```parallel_loader.service``` in ```/etc/systemd/system```
+```
+install -o root -g root -m 0644 /usr/local/cbmon/etc/parallel_loader.service /etc/systemd/system
+```
 
 5. Reload systemd, start and enable new service
 ```
