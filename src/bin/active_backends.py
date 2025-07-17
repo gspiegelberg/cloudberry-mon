@@ -186,9 +186,12 @@ for proc in psutil.process_iter(['cmdline', 'cpu_percent', 'cpu_times', 'create_
         results['mempct'] = proc.info['memory_percent']
 
         # cpu
-        results['cpu_usr'] = proc.info['cpu_times'].user
-        results['cpu_sys'] = proc.info['cpu_times'].system
-        results['cpu_iowait'] = proc.info['cpu_times'].iowait
+        try:
+            results['cpu_usr'] = proc.info['cpu_times'].user
+            results['cpu_sys'] = proc.info['cpu_times'].system
+            results['cpu_iowait'] = proc.info['cpu_times'].iowait
+        except:
+            pass
 
         # context switches
         results['ctxsw_vol'] = proc.info['num_ctx_switches'].voluntary

@@ -28,7 +28,7 @@ SELECT j->>'hostname' AS hostname
      , (j->>'server_port')::int AS server_port
      , j->>'role' AS role
      , j->>'database' AS database
-     , (j->>'client_ip')::inet AS client_ip
+     , (CASE WHEN j->>'client_ip' = '' THEN NULL ELSE j->>'client_ip' END)::inet AS client_ip
      , (j->>'client_port')::int AS client_port
      , (j->>'session_id')::int AS session_id
      , (j->>'cmdno')::int AS cmdno
