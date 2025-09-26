@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO cbmon.alters (id,summary) VALUES
-( 1021, 'monitoring of pxf' );
+( 1022, 'monitoring of pxf' );
 
 CREATE FOREIGN TABLE cbmon.pxf_cluster_status (
 	status text
