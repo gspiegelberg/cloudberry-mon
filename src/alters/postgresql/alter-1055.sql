@@ -17,10 +17,11 @@ BEGIN
 		SELECT public.cluster_server(c.id), public.cluster_metrics_schema(c.id), v.logtbl
 		FROM public.clusters c, (VALUES
 	('cat_gp_resgroup_config'),
+	('cat_gp_resgroup_iostats_per_host'),
 	('cat_gp_resgroup_status'),
 	('cat_gp_resgroup_status_per_host'),
-	('cat_gp_resgroup_iostats_per_host'),
-	('cat_pg_resgroup') ) AS v(logtbl)
+	('cat_gp_resgroup_status_per_segment'),
+	('cat_gp_resgroup_role') ) AS v(logtbl)
 		 WHERE c.enabled
 	LOOP
 		EXECUTE format('SELECT id = 1021 FROM %s.alters WHERE id = 1021', cmetrics) INTO alter_applied;
