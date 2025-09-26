@@ -6,10 +6,6 @@ INSERT INTO public.alters (id, summary) VALUES
 /**
  * Functions for use in functions where SQL may vary depending on tech in use
  */
-DROP FUNCTION is_warehousepg();
-DROP FUNCTION is_cloudberry();
-DROP FUNCTION is_greenplum();
-
 CREATE OR REPLACE FUNCTION public.is_warehousepg( v_cluster_id int )
 RETURNS boolean AS $$
 DECLARE
