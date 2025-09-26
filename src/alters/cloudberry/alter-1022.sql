@@ -21,14 +21,14 @@ CREATE FOREIGN TABLE cbmon.pxf_cluster_status (
 CREATE EXTERNAL WEB TABLE cbmon.__pxf_status_segments(
 	hostname text,
 	period timestamptz,
-	path text
+	status text
 ) EXECUTE 'printf "%s,%s," "$(hostname)" "$(date)"; source /home/gpadmin/.bashrc; pxf status | grep -v Checking | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"' ON HOST
   FORMAT 'CSV' ( DELIMITER ',' );
 
 CREATE EXTERNAL WEB TABLE cbmon.__pxf_status_master(
 	hostname text,
 	period timestamptz,
-	path text
+	status text
 ) EXECUTE 'printf "%s,%s," "$(hostname)" "$(date)"; source /home/gpadmin/.bashrc; pxf status | grep -v Checking | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g"' ON COORDINATOR
   FORMAT 'CSV' ( DELIMITER ',' );
 
@@ -41,14 +41,14 @@ SELECT * FROM cbmon.__pxf_status_master;
 CREATE EXTERNAL WEB TABLE cbmon.__pxf_version_segments(
 	hostname text,
 	period timestamptz,
-	path text
+	version text
 ) EXECUTE 'printf "%s,%s," "$(hostname)" "$(date)"; source /home/gpadmin/.bashrc; pxf version' ON HOST
   FORMAT 'CSV' ( DELIMITER ',' );
 
 CREATE EXTERNAL WEB TABLE cbmon.__pxf_version_master(
 	hostname text,
 	period timestamptz,
-	path text
+	version text
 ) EXECUTE 'printf "%s,%s," "$(hostname)" "$(date)"; source /home/gpadmin/.bashrc; pxf version' ON COORDINATOR
   FORMAT 'CSV' ( DELIMITER ',' );
 
