@@ -351,6 +351,11 @@ When using any connection pooler, important for pool size to be equal to ```conf
 
 Enabling summaries process
 ========================================================================
+NOTE:
+If alter-1064.sql is loaded, this process should not be used. Summaries
+process will eventually be deprecated.
+
+
 Summaries service execute functions responsible for generating periodic
 summarization of gathered performance metrics. It is useful for faster
 dashboard loads and permitting drill-down capabilities.
