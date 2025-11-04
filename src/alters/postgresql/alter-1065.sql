@@ -63,6 +63,7 @@ SELECT now() AS period, logtime::timestamptz, loguser::name, logdatabase::name
  WHERE logtime::timestamptz > %s::timestamptz
    AND (logstate <> ''00000'' OR logfile = ''ftsprobe.c'')
  ORDER BY logtime::timestamptz
+ RETURNING logtime::timestamptz
 )
 SELECT max(logtime) FROM ins'
 		, cmetrics, cmetrics, log_table, quote_literal(minperiod) );
