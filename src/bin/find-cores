@@ -3,16 +3,22 @@
 # Looks back 7 days at file create time
 # Permits less frequent looks for cores if wanted
 
-coredir=$( dirname $( cat /proc/sys/kernel/core_pattern ) )
-if [ -z "${coredir}" ]; then
+coredir=$( dirname $( awk '{printf("%s",$1)}' /proc/sys/kernel/core_pattern ) )
+
+if [ -z '${coredir}' ]; then
         # core dumping not enabled
         exit 0
+fi
+
+if [[ "${coredir}" =~ "systemd" ]]; then
+        # default systemd-coredump in use, may handle differently later
+	exit 0
 fi
 
 for core in $(find ${coredir} -maxdepth 1 -type f -name core-postgres-\* -ctime -7)
 do
         # process,signal,uid,gid,pid,ts
-        info=$( basename /data1/coredumps/core-postgres-11-500-500-2925854-1761504182 | sed -e 's/^core-//g' -e 's/-/,/g' )
+        info=$( basename "${core}" | sed -e 's/^core-//g' -e 's/-/,/g' )
         printf "%s,%s,%s\n" "$(hostname)" "${core}" "${info}"
 done
 
