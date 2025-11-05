@@ -61,7 +61,7 @@ DECLARE
 	this_table text;
 BEGIN
 	cmetrics := public.cluster_metrics_schema( v_cluster_id ) ;
-	this_table := 'cluster_cores';
+	this_table := '_cluster_cores';
 
 	EXECUTE format(
 	'SELECT last_period_end FROM public.summary_tracking WHERE cluster_id = %s AND summary_table = %s'
