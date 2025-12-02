@@ -24,3 +24,11 @@ INSERT INTO public.cluster_attribs (cluster_id, domain, value) VALUES
 ( X, 'segment.hosts',      48 );
 ```
 
+## Load function not producing results
+
+All work is done via procedure ```public.load()```.
+If data is not present in a metrics table or metrics table does not exist, check ```public.load_status```.
+
+```
+SELECT * FROM public.load_status WHERE summary <> 'success' ORDER BY created DESC;
+```
