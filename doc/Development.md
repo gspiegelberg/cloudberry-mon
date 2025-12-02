@@ -182,7 +182,7 @@ BEGIN
 	LOOP
 		EXECUTE format('SELECT id = 1200 FROM %s.alters WHERE id = 1200', cmetrics) INTO alter_applied;
 		IF NOT alter_applied THEN
-			RAISE EXCEPTION 'Cluster % does not have alters/cloudberry/alter-1018.sql applied', public.
+			RAISE EXCEPTION 'Cluster % does not have alters/cloudberry/alter-1200.sql applied', public.
 cluster_id_from_schema(cmetrics);
 		END IF;
 
@@ -207,3 +207,4 @@ COMMIT;
 Check your code to a branch, test, and create a pull request!
 
 Thanks!
+
