@@ -68,20 +68,24 @@ down as many from the system are averages between collection periods.
 gpssh -f allhosts sudo dnf -y install sysstat
 ```
 
-2. Modify all cluster hosts to override sysstat-collect.timer to once/minute
+2. Modify all cluster hosts to override sysstat-collect.timer to once/minute.
+This creates ```/etc/systemd/system/sysstat-collect.timer.d/override.conf```.
 ```
 sudo systemctl edit sysstat-collect.timer
 ```
-
-   Paste:
+Paste in editor:
 ```
 [Timer]
 OnCalendar=*:00/1
 ```
  
-3. Creates ```/etc/systemd/system/sysstat-collect.timer.d/override.conf```   2. Reloads systemctl daemon-reload
+3. Reload, enable and start
+```
+sudo systemctl daemon-reload
+sudo systemctl enable --now sysstat
+```
 
-   Automation:
+Alternative useful for larger clusters:
 ```
 cat << EOL > override.conf
 [Timer]
@@ -96,27 +100,34 @@ gpssh -f allhosts sudo systemctl daemon-reload
 gpssh -f allhosts sudo systemctl start sysstat-collect.timer
 gpssh -f allhosts sudo systemctl enable sysstat-collect.timer
 ```
-   NOTE for RHEL 9 variants:
+NOTE for RHEL 9 variants:
 ```
 gpssh -f allhosts sudo systemctl start sysstat
 gpssh -f allhosts sudo systemctl enable sysstat
 ```
-   RHEL 8/9 verify: Files should grow once/minute in ```/var/log/sa```
+RHEL 8/9 verify: Files should grow once/minute in ```/var/log/sa```
 ```
 ls -l /var/log/sa
 sar -f /var/log/sa/saDD -b
 ```
-4. Copy tar to all hosts
+
+4. Create cbmon RPM
 ```
-gpsync -f allhosts cbmon.tar.gz =:/tmp
+cd cloudberry-mon/pkg
+./build_rpm -r X -v Y.Z -d el8
 ```
 
-5. Unpack tar in ```/usr/local```
+4. Copy RPM to all hosts
 ```
-gpssh -f allhosts sudo tar xpfz /tmp/cbmon.tar.gz -C /usr/local
+gpsync -f allhosts cbmon-Y.Z-X.el8.noarch.rpm =:/tmp
 ```
 
-6. Change ownership
+5. Install on all cluster hosts
+```
+gpssh -f allhosts sudo rpm -ivh /tmp/cbmon-Y.Z-X.el8.noarch.rpm
+```
+
+6. Verify & change ownership
 ```
 gpssh -f allhosts sudo chown -R gpadmin:gpadmin /usr/local/cbmon
 ```
@@ -143,9 +154,9 @@ gpstop -u
 PostgreSQL Metrics Database Host Only
 ========================================================================
 
-1. Unpack 
+1. Install same RPM created above on cbmon host
 ```
-sudo tar xpfz /tmp/cbmon.tar.gz -C /usr/local
+sudo rpm -ivh cloudberry-mon/pkg/cbmon-Y.Z-X.el8.noarch.rpm
 ```
 
 2. Change ownership to postgres
