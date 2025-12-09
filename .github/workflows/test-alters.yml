@@ -1,0 +1,82 @@
+name: Test cbmon Alters DDL Against PostgreSQL & Warehouse-PG
+on:
+  push:
+    paths:
+      - "cloudberry-mon/src/alters/cloudberry/*.sql"
+      - "cloudberry-mon/src/alters/postgres/*.sql"
+      - ".github/workflows/test-alters.yml"
+  pull_request:
+
+jobs:
+  test-ddl:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17.5
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        options: >-
+          --health-cmd="pg_isready -U testuser -d testdb"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+      warehousepg:
+        image: ghcr.io/warehouse-pg/whpg7-rocky8-build:latest
+        ports:
+          - 55432:5432
+        env:
+          POSTGRES_DB: whdb
+          POSTGRES_USER: whuser
+          POSTGRES_PASSWORD: whpass
+        options: >-
+          --health-cmd="pg_isready -U whuser -d whdb -h localhost -p 5432"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL 17.5
+        run: |
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      - name: Wait for Warehouse-PG
+        run: |
+          until pg_isready -h localhost -p 55432 -U whuser; do
+            echo "Waiting for Warehouse-PG..."
+            sleep 2
+          done
+
+      # Run ALTER scripts for PostgreSQL (cloudberry-mon/src/alters/postgresql)
+      - name: Run PostgreSQL ALTER scripts
+        run: |
+          echo "Running PostgreSQL DDL scripts..."
+          for f in $(ls cloudberry-mon/src/alters/postgresql/*.sql | sort); do
+            echo "Executing PostgreSQL alter file: $f"
+            psql "postgresql://testuser:testpass@localhost:5432/testdb" -f "$f"
+          done
+
+      # Run ALTER scripts for Warehouse-PG (cloudberry-mon/src/alters/cloudberry)
+      - name: Run Warehouse-PG ALTER scripts
+        run: |
+          echo "Running Warehouse-PG DDL scripts..."
+          for f in $(ls cloudberry-mon/src/alters/cloudberry/*.sql | sort); do
+            echo "Executing Warehouse-PG alter file: $f"
+            psql "postgresql://whuser:whpass@localhost:55432/whdb" -f "$f"
+          done
