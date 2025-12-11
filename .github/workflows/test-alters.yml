@@ -3,7 +3,7 @@ on:
   push:
     paths:
       # - "cloudberry-mon/src/alters/cloudberry/*.sql"
-      - "cloudberry-mon/src/alters/postgres/*.sql"
+      - "cloudberry-mon/src/alters/postgresql/*.sql"
       - ".github/workflows/test-alters.yml"
   pull_request:
 
